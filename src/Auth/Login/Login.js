@@ -18,8 +18,12 @@ export default class Login extends Component {
         source={require('../../Public/Assets/images/bg.png')}
         style={styles.container}>
         <View style={styles.wrapperHeader}>
-          <FontAwesome5 name="bus" color={Color.primary} size={48} />
-          <Text style={styles.textTitle}>Manifest Transport</Text>
+          <FontAwesome5
+            name="map-marker-alt"
+            color={Color.quarternary}
+            size={48}
+          />
+          <Text style={styles.textTitle}>My Facility App</Text>
         </View>
 
         <View style={styles.containerInput}>

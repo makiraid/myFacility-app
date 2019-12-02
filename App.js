@@ -16,7 +16,12 @@ class App extends Component {
       // <Provider store={store}>
       // <PersistGate loading={null} persistor={persistor}>
       <React.Fragment>
-        <StatusBar backgroundColor="#F3F3F3" barStyle="dark-content" />
+        <StatusBar
+          animated
+          translucent
+          backgroundColor="rgba(255,255,255,0.7)"
+          barStyle="dark-content"
+        />
         <Navigator />
       </React.Fragment>
       // </PersistGate>
