@@ -1,13 +1,31 @@
 import React, { Component } from 'react';
-import { Text, StyleSheet, View, Dimensions, TextInput } from 'react-native';
+import {
+  Text,
+  StyleSheet,
+  View,
+  Dimensions,
+  TextInput,
+  Image
+} from 'react-native';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {
   CoordinatorLayout,
   BottomSheetBehavior
 } from 'react-native-bottom-sheet-behavior';
+import ImagePicker from 'react-native-image-picker';
+import { toast } from '../Public/components';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 // import Color from '../Public/Color';
 const height = Dimensions.get('window').height;
+const width = Dimensions.get('window').width;
+const options = {
+  title: 'Select Photo',
+  storageOptions: {
+    skipBackup: true,
+    path: 'myfacilityapp'
+  }
+};
 class Home extends Component {
   // static navigationOptions = ({ navigation }) => ({
   //   title: 'Home'
@@ -17,7 +35,24 @@ class Home extends Component {
     header: null
   };
 
+  state = {
+    image: ''
+  };
+
+  onImageClick = async () => {
+    ImagePicker.showImagePicker(options, response => {
+      if (response.didCancel) {
+        toast('Cancel image pick');
+      } else {
+        this.setState({
+          image: response.uri
+        });
+      }
+    });
+  };
+
   render() {
+    const { image } = this.state;
     return (
       <CoordinatorLayout style={styles.coodinatorlayout}>
         <MapView
@@ -51,12 +86,6 @@ class Home extends Component {
             <View style={styles.miniContainer}>
               <Text style={styles.textTitle}>Where are you ?</Text>
               <View style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                <FontAwesome5
-                  style={styles.iconInput}
-                  name="edit"
-                  color="grey"
-                  size={16}
-                />
                 <TextInput
                   style={styles.input}
                   placeholder="Input your location"
@@ -65,11 +94,6 @@ class Home extends Component {
                       BottomSheetBehavior.STATE_EXPANDED
                     )
                   }
-                  onBlur={() => {
-                    this.refs.bottomSheet.setBottomSheetState(
-                      BottomSheetBehavior.STATE_COLLAPSED
-                    );
-                  }}
                 />
               </View>
               <View style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
@@ -80,30 +104,19 @@ class Home extends Component {
                   size={16}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={styles.miniInput}
                   placeholder="Input detail location"
                   onFocus={() =>
                     this.refs.bottomSheet.setBottomSheetState(
                       BottomSheetBehavior.STATE_EXPANDED
                     )
                   }
-                  onBlur={() => {
-                    this.refs.bottomSheet.setBottomSheetState(
-                      BottomSheetBehavior.STATE_COLLAPSED
-                    );
-                  }}
                 />
               </View>
             </View>
             <View style={styles.miniContainer}>
               <Text style={styles.textTitle}>Whats your problem ?</Text>
               <View style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                <FontAwesome5
-                  style={styles.iconInput}
-                  name="edit"
-                  color="grey"
-                  size={16}
-                />
                 <TextInput
                   style={styles.input}
                   placeholder="Input your problem"
@@ -112,13 +125,22 @@ class Home extends Component {
                       BottomSheetBehavior.STATE_EXPANDED
                     )
                   }
-                  onBlur={() => {
-                    this.refs.bottomSheet.setBottomSheetState(
-                      BottomSheetBehavior.STATE_COLLAPSED
-                    );
-                  }}
                 />
               </View>
+            </View>
+            <View style={styles.miniContainer}>
+              <Text style={styles.textTitle}>Post a Picture!</Text>
+              <TouchableOpacity
+                style={styles.image}
+                onPress={this.onImageClick}>
+                {image ? (
+                  <Image source={{ uri: image }} style={styles.image} />
+                ) : (
+                  <View style={styles.image}>
+                    <FontAwesome5 name="camera" color="grey" size={24} />
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
         </BottomSheetBehavior>
@@ -162,7 +184,12 @@ const styles = StyleSheet.create({
   input: {
     zIndex: 1,
     fontSize: 12,
-    padding: 10,
+    padding: 8
+  },
+  miniInput: {
+    zIndex: 1,
+    fontSize: 12,
+    padding: 5,
     paddingLeft: 0
   },
   wrapperDetailLocation: {
@@ -176,6 +203,15 @@ const styles = StyleSheet.create({
     marginLeft: 8
   },
   iconInput: {
-    margin: 16
+    margin: 8
+  },
+  image: {
+    marginTop: 10,
+    width: width / 2,
+    height: width / 1.5,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });
