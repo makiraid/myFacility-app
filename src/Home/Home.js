@@ -5,7 +5,8 @@ import {
   View,
   Dimensions,
   TextInput,
-  Image
+  Image,
+  TouchableOpacity
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -15,7 +16,6 @@ import {
 } from 'react-native-bottom-sheet-behavior';
 import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import Color from '../Public/Color';
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
