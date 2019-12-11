@@ -8,7 +8,7 @@ import {
   Image,
   TouchableOpacity
 } from 'react-native';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {
   CoordinatorLayout,
@@ -26,16 +26,32 @@ const options = {
     path: 'myfacilityapp'
   }
 };
+const marker = require('../Public/Assets/icon/marker.png');
 class Home extends Component {
   // static navigationOptions = ({ navigation }) => ({
   //   title: 'Home'
   // });
+
+  componentDidMount() {
+    setTimeout(() => {
+      this.refs.map.animateToRegion(
+        {
+          latitude: -6.3302921,
+          longitude: 106.6778804,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02
+        },
+        2000
+      );
+    }, 2000);
+  }
 
   static navigationOptions = {
     header: null
   };
 
   state = {
+    isMapReady: false,
     image: ''
   };
 
@@ -51,13 +67,25 @@ class Home extends Component {
     });
   };
 
+  onMapLayout = () => {
+    this.setState({ isMapReady: true });
+  };
+
   render() {
     const { image } = this.state;
     return (
       <CoordinatorLayout style={styles.coodinatorlayout}>
         <MapView
+          ref="map"
+          showsUserLocation
+          moveOnMarkerPress
+          showsMyLocationButton
+          showsScale={false}
+          showsBuildings
+          showsCompass
           provider={PROVIDER_GOOGLE} // remove if not using Google Maps
           style={styles.container}
+          onLayout={this.onMapLayout}
           region={{
             latitude: -6.175392,
             longitude: 106.827153,
@@ -69,8 +97,19 @@ class Home extends Component {
             right: 0,
             bottom: 250,
             left: 0
-          }}
-        />
+          }}>
+          {this.state.isMapReady ? (
+            <Marker
+              moveOnMarkerPress={true}
+              style={{ height: 50, width: 50 }}
+              coordinate={{
+                latitude: -6.3302921,
+                longitude: 106.6778804
+              }}>
+              <Image source={marker} style={{ height: 50, width: 45 }} />
+            </Marker>
+          ) : null}
+        </MapView>
         <BottomSheetBehavior
           ref="bottomSheet"
           peekHeight={250}
@@ -223,7 +262,8 @@ const styles = StyleSheet.create({
     backgroundColor: Color.primary,
     borderRadius: 5,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    marginTop: 16
   },
   textButton: {
     margin: 16,
