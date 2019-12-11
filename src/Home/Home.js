@@ -16,7 +16,7 @@ import {
 import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-// import Color from '../Public/Color';
+import Color from '../Public/Color';
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 const options = {
@@ -142,6 +142,11 @@ class Home extends Component {
                 )}
               </TouchableOpacity>
             </View>
+            <View style={styles.miniContainer}>
+              <View style={styles.button}>
+                <Text style={styles.textButton}>Submit</Text>
+              </View>
+            </View>
           </View>
         </BottomSheetBehavior>
       </CoordinatorLayout>
@@ -213,5 +218,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  button: {
+    backgroundColor: Color.primary,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  textButton: {
+    margin: 16,
+    color: 'white',
+    fontWeight: 'bold'
   }
 });
