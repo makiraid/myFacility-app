@@ -47,6 +47,12 @@ export default class Login extends Component {
         </View>
 
         <View style={styles.wrapperForgotPassword}>
+          <TouchableNativeFeedback
+            onPress={() => this.props.navigation.navigate('Register')}>
+            <Text style={[styles.textButton, styles.textForgotPassword]}>
+              Register
+            </Text>
+          </TouchableNativeFeedback>
           <Text style={[styles.textButton, styles.textForgotPassword]}>
             Lupa Kata Sandi?
           </Text>
@@ -101,7 +107,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   wrapperForgotPassword: {
-    width: '100%'
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
   textForgotPassword: {
     color: '#000',

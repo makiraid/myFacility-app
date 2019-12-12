@@ -4,12 +4,12 @@ import thunk from 'redux-thunk';
 import logger from 'redux-logger';
 import AsyncStorage from '@react-native-community/async-storage';
 
-import reducer from './reducer';
+import reducer from './middlewares';
 
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['manifest']
+  whitelist: ['auth']
 };
 const persistedReducer = persistReducer(persistConfig, reducer);
 

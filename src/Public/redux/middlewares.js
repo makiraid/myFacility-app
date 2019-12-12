@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import manifest from '../../AddManifest/reducer';
+import auth from './reducers/auth';
 
 export default combineReducers({
-  manifest
+  auth
 });

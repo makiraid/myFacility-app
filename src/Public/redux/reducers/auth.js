@@ -1,0 +1,27 @@
+const initialState = {
+  data: ''
+};
+
+const auth = async (state = initialState, action) => {
+  switch (action.type) {
+    case 'POST_REGISTER_FULFILLED':
+      return {
+        ...state,
+        isLoading: true,
+        message: 'success'
+      };
+
+    case 'POST_LOGIN_FULFILLED':
+      return {
+        ...state,
+        isLoading: true,
+        authToken: action.payload.data.user.token,
+        message: 'success'
+      };
+
+    default:
+      return state;
+  }
+};
+
+export default auth;
