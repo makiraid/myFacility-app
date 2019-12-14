@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// import { HOST_NAME } from 'react-native-dotenv';
+import { HOST_NAME } from 'react-native-dotenv';
 
-const HOST_NAME = 'https://compliance990.herokuapp.com/';
+// const HOST_NAME = 'https://compliance990.herokuapp.com/';
 
 // const header = async () => {
 //   return {
