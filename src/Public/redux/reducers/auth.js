@@ -2,7 +2,7 @@ const initialState = {
   data: ''
 };
 
-const auth = async (state = initialState, action) => {
+const auth = (state = initialState, action) => {
   switch (action.type) {
     case 'POST_REGISTER_FULFILLED':
       return {
@@ -15,7 +15,7 @@ const auth = async (state = initialState, action) => {
       return {
         ...state,
         isLoading: true,
-        authToken: action.payload.data.user.token,
+        authToken: action.payload.data.user,
         message: 'success'
       };
 

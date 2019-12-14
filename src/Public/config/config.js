@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// import { API_KEY } from 'react-native-dotenv';
+// import { HOST_NAME } from 'react-native-dotenv';
 
-API_KEY = 'https://compliance990.herokuapp.com/';
+const HOST_NAME = 'https://compliance990.herokuapp.com/';
 
 // const header = async () => {
 //   return {
@@ -13,8 +13,8 @@ API_KEY = 'https://compliance990.herokuapp.com/';
 //   };
 // };
 
-const post = async (url, data, header) => {
-  return await axios.post(`${API_KEY + url}`, data, header)
+const post = (url, data, header) => {
+  return axios.post(`${HOST_NAME + url}`, data, header);
 };
 
 export default { post };

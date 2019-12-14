@@ -5,13 +5,58 @@ import {
   StyleSheet,
   ImageBackground,
   TextInput,
-  TouchableNativeFeedback
+  TouchableNativeFeedback,
+  ActivityIndicator
 } from 'react-native';
+import { connect } from 'react-redux';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import Color from '../../Public/Color';
+import { toast } from '../../Public/components';
+import { HOST_NAME } from 'react-native-dotenv';
+import Axios from 'axios';
 
-export default class Login extends Component {
+class Login extends Component {
+  state = {
+    email: '',
+    password: '',
+    isLoading: false
+  };
+
+  handleLogin = () => {
+    const { email, password } = this.state;
+    if (!email || !password) {
+      toast('Email and Password cannot be empty');
+    } else {
+      this.onRequestLogin(email, password);
+    }
+  };
+
+  onRequestLogin = (e, p) => {
+    this.setState({ isLoading: true });
+    const body = {
+      email: e,
+      password: p
+    };
+
+    Axios.post(`${HOST_NAME}api/v1/sign-in`, body)
+      .then(res => {
+        const resp = res.data;
+        if (resp.resultCode === 0) {
+          this.props.setDataLogin(res);
+          this.props.navigation.navigate('App');
+        } else {
+          toast(resp.resultDesc);
+        }
+      })
+      .catch(err => {
+        toast(JSON.stringify(err.message));
+      })
+      .finally(() => {
+        this.setState({ isLoading: false });
+      });
+  };
+
   render() {
     return (
       <ImageBackground
@@ -32,7 +77,13 @@ export default class Login extends Component {
               <FontAwesome5 name="envelope" color={Color.primary} size={18} />
             </View>
             <View style={styles.input}>
-              <TextInput placeholder="Email" />
+              <TextInput
+                editable={!this.state.isLoading}
+                autoCompleteType="email"
+                keyboardType="email-address"
+                placeholder="Email"
+                onChangeText={text => this.setState({ email: text })}
+              />
             </View>
           </View>
 
@@ -41,7 +92,12 @@ export default class Login extends Component {
               <FontAwesome5 name="lock" color={Color.primary} size={18} />
             </View>
             <View style={styles.input}>
-              <TextInput secureTextEntry placeholder="Kata Sandi" />
+              <TextInput
+                editable={!this.state.isLoading}
+                onChangeText={text => this.setState({ password: text })}
+                secureTextEntry
+                placeholder="Kata Sandi"
+              />
             </View>
           </View>
         </View>
@@ -59,15 +115,37 @@ export default class Login extends Component {
         </View>
 
         <TouchableNativeFeedback
-          onPress={() => this.props.navigation.navigate('App')}>
+          disabled={this.state.isLoading}
+          onPress={this.handleLogin}>
           <View style={styles.button}>
-            <Text style={styles.textButton}>Masuk</Text>
+            {this.state.isLoading ? (
+              <ActivityIndicator
+                color={Color.Background}
+                size="small"
+                style={{ margin: 16 }}
+              />
+            ) : (
+              <Text style={styles.textButton}>Masuk</Text>
+            )}
           </View>
         </TouchableNativeFeedback>
       </ImageBackground>
     );
   }
 }
+
+const mapDispatchToProps = dispatch => ({
+  setDataLogin: payload =>
+    dispatch({
+      type: 'POST_LOGIN_FULFILLED',
+      payload
+    })
+});
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(Login);
 
 const styles = StyleSheet.create({
   container: {

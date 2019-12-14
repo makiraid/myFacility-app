@@ -58,12 +58,11 @@ class Register extends Component {
       config
         .post('api/v1/sign-in', {
           email: email,
-          password: password,
-          imei: '112233'
+          password: password
         })
         .then(res => {
           message = res.data.resultDesc;
-          if (message == 'Success !') {
+          if (message === 'Success !') {
             this.props.setDataLogin(res);
             this.props.navigation.navigate('App');
             this.setState({ submitLogin: false });
@@ -190,7 +189,10 @@ const mapDispatchToProps = dispatch => ({
     })
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Register);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Register);
 
 const styles = StyleSheet.create({
   container: {
