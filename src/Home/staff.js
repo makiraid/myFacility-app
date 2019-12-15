@@ -67,6 +67,28 @@ class personal extends Component {
     ]
   };
 
+  getOrder = () => {
+    const { userCode, token } = this.props.auth;
+    this.setState({
+      isLoading: true
+    });
+    const body = {
+      userCode: userCode,
+      token: token
+    };
+    Axios.post(`${HOST_NAME}api/v1/order-list`, body)
+      .then(res => {
+        // console.log(res);
+        this.animate();
+      })
+      .catch(() => {
+        // console.log(err);
+      })
+      .finally(() => {
+        this.setState({ isLoading: false });
+      });
+  };
+
   animate = () => {
     let latMin = 0,
       latMax = 0,
@@ -105,37 +127,9 @@ class personal extends Component {
     let latAvg = latSum / this.state.orderList.length;
     let longAvg = longSum / this.state.orderList.length;
 
-    this.refs.map.animateToRegion(
-      {
-        latitude: latAvg,
-        longitude: longAvg,
-        latitudeDelta: latDelta,
-        longitudeDelta: longDelta
-      },
-      1500
-    );
-  };
-
-  getOrder = () => {
-    const { userCode, token } = this.props.auth;
-    this.setState({
-      isLoading: true
-    });
-    const body = {
-      userCode: userCode,
-      token: token
-    };
-    Axios.post(`${HOST_NAME}api/v1/order-list`, body)
-      .then(res => {
-        // console.log(res);
-        this.animate;
-      })
-      .catch(() => {
-        // console.log(err);
-      })
-      .finally(() => {
-        this.setState({ isLoading: false });
-      });
+    setTimeout(() => {
+      this.onChangeLayout(latAvg, longAvg, latDelta, longDelta);
+    }, 500);
   };
 
   onImageClick = async () => {
@@ -150,15 +144,15 @@ class personal extends Component {
     });
   };
 
-  onChangeLayout = async () => {
+  onChangeLayout = async (lang, long, langDelta, longDelta) => {
     await this.refs.map.animateToRegion(
       {
-        latitude: -6.3302921,
-        longitude: 106.6778804,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02
+        latitude: lang,
+        longitude: long,
+        latitudeDelta: langDelta,
+        longitudeDelta: longDelta
       },
-      2000
+      1500
     );
   };
 
@@ -212,36 +206,30 @@ class personal extends Component {
               </View>
             </BottomSheetBehavior>
           </View>
-        ) : this.state.isButton ? (
-          <View style={styles.overlayButton}>
-            <BottomSheetBehavior
-              ref="bottomSheet"
-              peekHeight={100}
-              hideable={false}
-              state={BottomSheetBehavior.STATE_HIDDEN}>
-              <View style={styles.parentButton}>
-                <TouchableNativeFeedback
-                  onPress={() => {
-                    this.setState({
-                      isButton: false,
-                      isCheckbox: false,
-                      isLoading: false
-                    });
-                  }}>
-                  <View style={[styles.buttonBottom, styles.activeButton]}>
-                    <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
-                  </View>
-                </TouchableNativeFeedback>
+        ) : (
+          <BottomSheetBehavior
+            ref="bottomSheet"
+            peekHeight={250}
+            hideable={false}
+            state={BottomSheetBehavior.STATE_COLLAPSED}>
+            {this.state.isButton ? (
+              <View style={{ height: 66, backgroundColor: 'rgba(0,0,0,0.0)' }}>
+                <View style={styles.miniContainer}>
+                  <TouchableNativeFeedback
+                    onPress={() => {
+                      this.setState({
+                        isButton: false,
+                        isCheckbox: false,
+                        isLoading: false
+                      });
+                    }}>
+                    <View style={[styles.buttonBottom, styles.activeButton]}>
+                      <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
+                    </View>
+                  </TouchableNativeFeedback>
+                </View>
               </View>
-            </BottomSheetBehavior>
-          </View>
-        ) : this.state.isCheckbox ? (
-          <View style={styles.overlayCheckbox}>
-            <BottomSheetBehavior
-              ref="bottomSheet"
-              peekHeight={100}
-              hideable={false}
-              state={BottomSheetBehavior.STATE_HIDDEN}>
+            ) : this.state.isCheckbox ? (
               <View style={styles.parentCheckbox}>
                 <Text style={styles.textTitle}>Let's Check Your</Text>
                 <TouchableOpacity style={styles.checkboxWrapper}>
@@ -266,107 +254,103 @@ class personal extends Component {
                   </View>
                 </TouchableNativeFeedback>
               </View>
-            </BottomSheetBehavior>
-          </View>
-        ) : (
-          <BottomSheetBehavior
-            ref="bottomSheet"
-            peekHeight={250}
-            hideable={false}
-            state={BottomSheetBehavior.STATE_COLLAPSED}>
-            <View style={{ height: height, backgroundColor: '#fff' }}>
-              <FontAwesome5
-                style={styles.icon}
-                name="grip-lines"
-                size={18}
-                color="#c9c9c9"
-              />
-              <View style={styles.miniContainer}>
-                <Text style={styles.textTitle}>Where are you ?</Text>
-                <View
-                  style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Input your location"
-                    onFocus={() =>
-                      this.refs.bottomSheet.setBottomSheetState(
-                        BottomSheetBehavior.STATE_EXPANDED
-                      )
-                    }
-                    onChangeText={text =>
-                      this.setState({ inputLocation: text })
-                    }
-                    value={this.state.inputLocation}
-                  />
+            ) : (
+              <View style={{ height: height, backgroundColor: '#fff' }}>
+                <FontAwesome5
+                  style={styles.icon}
+                  name="grip-lines"
+                  size={18}
+                  color="#c9c9c9"
+                />
+                <View style={styles.miniContainer}>
+                  <Text style={styles.textTitle}>Where are you ?</Text>
+                  <View
+                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Input your location"
+                      onFocus={() =>
+                        this.refs.bottomSheet.setBottomSheetState(
+                          BottomSheetBehavior.STATE_EXPANDED
+                        )
+                      }
+                      onChangeText={text =>
+                        this.setState({ inputLocation: text })
+                      }
+                      value={this.state.inputLocation}
+                    />
+                  </View>
+                  <View
+                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                    <FontAwesome5
+                      style={styles.iconInput}
+                      name="edit"
+                      color="grey"
+                      size={16}
+                    />
+                    <TextInput
+                      style={styles.miniInput}
+                      placeholder="Input detail location"
+                      onFocus={() =>
+                        this.refs.bottomSheet.setBottomSheetState(
+                          BottomSheetBehavior.STATE_EXPANDED
+                        )
+                      }
+                      onChangeText={text =>
+                        this.setState({ inputDetailLocation: text })
+                      }
+                      value={this.state.inputDetailLocation}
+                    />
+                  </View>
                 </View>
-                <View
-                  style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                  <FontAwesome5
-                    style={styles.iconInput}
-                    name="edit"
-                    color="grey"
-                    size={16}
-                  />
-                  <TextInput
-                    style={styles.miniInput}
-                    placeholder="Input detail location"
-                    onFocus={() =>
-                      this.refs.bottomSheet.setBottomSheetState(
-                        BottomSheetBehavior.STATE_EXPANDED
-                      )
-                    }
-                    onChangeText={text =>
-                      this.setState({ inputDetailLocation: text })
-                    }
-                    value={this.state.inputDetailLocation}
-                  />
+                <View style={styles.miniContainer}>
+                  <Text style={styles.textTitle}>Whats your problem ?</Text>
+                  <View
+                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Input your problem"
+                      onFocus={() =>
+                        this.refs.bottomSheet.setBottomSheetState(
+                          BottomSheetBehavior.STATE_EXPANDED
+                        )
+                      }
+                      onChangeText={text =>
+                        this.setState({ inputProblem: text })
+                      }
+                      value={this.state.inputProblem}
+                    />
+                  </View>
+                </View>
+                <View style={styles.miniContainer}>
+                  <Text style={styles.textTitle}>Post a Picture!</Text>
+                  <TouchableOpacity
+                    style={styles.image}
+                    onPress={this.onImageClick}>
+                    {image ? (
+                      <Image source={{ uri: image }} style={styles.image} />
+                    ) : (
+                      <View style={styles.image}>
+                        <FontAwesome5 name="camera" color="grey" size={24} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.miniContainer}>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      await this.setState({
+                        isCheckbox: true,
+                        isLoading: false,
+                        isButton: false
+                      });
+                    }}
+                    style={styles.button}>
+                    <Text style={styles.textButton}>Submit</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-              <View style={styles.miniContainer}>
-                <Text style={styles.textTitle}>Whats your problem ?</Text>
-                <View
-                  style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Input your problem"
-                    onFocus={() =>
-                      this.refs.bottomSheet.setBottomSheetState(
-                        BottomSheetBehavior.STATE_EXPANDED
-                      )
-                    }
-                    onChangeText={text => this.setState({ inputProblem: text })}
-                    value={this.state.inputProblem}
-                  />
-                </View>
-              </View>
-              <View style={styles.miniContainer}>
-                <Text style={styles.textTitle}>Post a Picture!</Text>
-                <TouchableOpacity
-                  style={styles.image}
-                  onPress={this.onImageClick}>
-                  {image ? (
-                    <Image source={{ uri: image }} style={styles.image} />
-                  ) : (
-                    <View style={styles.image}>
-                      <FontAwesome5 name="camera" color="grey" size={24} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
-              <View style={styles.miniContainer}>
-                <TouchableOpacity
-                  onPress={async () => {
-                    await this.setState({
-                      isCheckbox: true,
-                      isLoading: false,
-                      isButton: false
-                    });
-                  }}
-                  style={styles.button}>
-                  <Text style={styles.textButton}>Submit</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            )}
           </BottomSheetBehavior>
         )}
       </CoordinatorLayout>
