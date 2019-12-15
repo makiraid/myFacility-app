@@ -6,6 +6,8 @@ module.exports = {
     "no-unused-vars": 2,
     "prettier/prettier": 2,
     "comma-spacing": 2,
-    "comma-dangle": 0
+    "comma-dangle": 0,
+    "react-native/no-inline-styles": "off",
+    "react/no-string-refs": "off"
   }
 };
