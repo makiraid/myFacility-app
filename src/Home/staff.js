@@ -44,7 +44,7 @@ class personal extends Component {
   }
 
   state = {
-    isMapReady: false,
+    isMapReady: true,
     image: '',
     inputLocation: '',
     inputDetailLocation: '',
@@ -53,18 +53,7 @@ class personal extends Component {
     isLoading: false,
     isButton: true,
     isCheckbox: false,
-    orderList: [
-      {
-        name: 'Diana',
-        latitude: -6.225853,
-        longitude: 106.851921
-      },
-      {
-        name: 'Diana',
-        latitude: -6.226539,
-        longitude: 106.854402
-      }
-    ]
+    markerActive: {}
   };
 
   getOrder = () => {
@@ -102,8 +91,8 @@ class personal extends Component {
       let lat = split[0];
       let long = split[1];
 
-      lat = parseFloat(lat);
-      long = parseFloat(long);
+      lat = Number(lat);
+      long = Number(long);
 
       if (latMax === 0 && latMin === 0 && longMin === 0 && longMin === 0) {
         latMax = lat;
@@ -193,17 +182,34 @@ class personal extends Component {
             ? null
             : this.props.order.map(item => {
                 const split = item.locationcoor.split(',');
-                const lat = parseFloat(split[0]);
-                const long = parseFloat(split[1]);
+                const lat = Number(split[0]);
+                const long = Number(split[1]);
+                const markerDisable = require('../Public/Assets/icon/marker-disable.jpg');
                 return (
                   <Marker
                     moveOnMarkerPress={true}
                     style={{ height: 50, width: 50 }}
+                    onPress={() => {
+                      this.onChangeLayout(lat, long, 0.02, 0.02);
+                      setTimeout(() => {
+                        this.setState({
+                          markerActive: item
+                        });
+                      }, 1500);
+                    }}
                     coordinate={{
                       latitude: lat,
                       longitude: long
                     }}>
-                    <Image source={marker} style={{ height: 50, width: 45 }} />
+                    <Image
+                      source={
+                        this.state.markerActive &&
+                        this.state.markerActive.orderid === item.orderid
+                          ? marker
+                          : markerDisable
+                      }
+                      style={{ height: 50, width: 45 }}
+                    />
                   </Marker>
                 );
               })}
@@ -236,8 +242,15 @@ class personal extends Component {
                         isCheckbox: false,
                         isLoading: false
                       });
-                    }}>
-                    <View style={[styles.buttonBottom, styles.activeButton]}>
+                    }}
+                    disabled={this.state.markerActive.orderid ? false : true}>
+                    <View
+                      style={[
+                        styles.buttonBottom,
+                        this.state.markerActive.orderid
+                          ? styles.activeButton
+                          : null
+                      ]}>
                       <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
                     </View>
                   </TouchableNativeFeedback>
