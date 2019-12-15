@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 class index extends Component {
   async componentDidMount() {
-    if (this.props.auth.token) {
+    if (this.props.auth) {
       this.props.navigation.navigate('App');
     } else {
       this.props.navigation.navigate('Auth');
