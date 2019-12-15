@@ -191,11 +191,12 @@ class personal extends Component {
                     style={{ height: 50, width: 50 }}
                     onPress={() => {
                       this.onChangeLayout(lat, long, 0.02, 0.02);
-                      setTimeout(() => {
-                        this.setState({
-                          markerActive: item
-                        });
-                      }, 1500);
+                      this.setState({
+                        markerActive: item,
+                        isButton: true,
+                        isCheckbox: false,
+                        isLoading: false
+                      });
                     }}
                     coordinate={{
                       latitude: lat,
