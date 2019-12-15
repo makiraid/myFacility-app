@@ -102,7 +102,6 @@ class personal extends Component {
       let lat = split[0];
       let long = split[1];
 
-      // eslint-disable-next-line radix
       lat = parseFloat(lat);
       long = parseFloat(long);
 
@@ -190,17 +189,24 @@ class personal extends Component {
             bottom: 250,
             left: 0
           }}>
-          {this.state.isMapReady ? (
-            <Marker
-              moveOnMarkerPress={true}
-              style={{ height: 50, width: 50 }}
-              coordinate={{
-                latitude: -6.3302921,
-                longitude: 106.6778804
-              }}>
-              <Image source={marker} style={{ height: 50, width: 45 }} />
-            </Marker>
-          ) : null}
+          {!this.state.isMapReady
+            ? null
+            : this.props.order.map(item => {
+                const split = item.locationcoor.split(',');
+                const lat = parseFloat(split[0]);
+                const long = parseFloat(split[1]);
+                return (
+                  <Marker
+                    moveOnMarkerPress={true}
+                    style={{ height: 50, width: 50 }}
+                    coordinate={{
+                      latitude: lat,
+                      longitude: long
+                    }}>
+                    <Image source={marker} style={{ height: 50, width: 45 }} />
+                  </Marker>
+                );
+              })}
         </MapView>
         {this.state.isLoading ? (
           <View style={styles.overlayLoading}>
