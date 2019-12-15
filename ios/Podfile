@@ -42,6 +42,8 @@ target 'MyFacilityApp' do
   pod 'GoogleMaps'
   pod 'Google-Maps-iOS-Utils'
 
+  pod 'react-native-maps', :path => '../node_modules/react-native-maps'
+
   target 'MyFacilityAppTests' do
     inherit! :search_paths
     # Pods for testing

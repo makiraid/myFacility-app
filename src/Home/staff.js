@@ -1,14 +1,22 @@
 import React, { Component } from 'react';
 import {
+  Text,
   StyleSheet,
-  Dimensions,
-  Image,
-  TouchableNativeFeedback,
   View,
-  Text
+  Dimensions,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  TouchableNativeFeedback,
+  CheckBox
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
-import { CoordinatorLayout } from 'react-native-bottom-sheet-behavior';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import {
+  CoordinatorLayout,
+  BottomSheetBehavior
+} from 'react-native-bottom-sheet-behavior';
 import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
@@ -42,7 +50,70 @@ class personal extends Component {
     inputDetailLocation: '',
     inputProblem: '',
     status: 0,
-    isLoading: false
+    isLoading: false,
+    isButton: true,
+    isCheckbox: false,
+    orderList: [
+      {
+        name: 'Diana',
+        latitude: -6.225853,
+        longitude: 106.851921
+      },
+      {
+        name: 'Diana',
+        latitude: -6.226539,
+        longitude: 106.854402
+      }
+    ]
+  };
+
+  animate = () => {
+    let latMin = 0,
+      latMax = 0,
+      longMin = 0,
+      longMax = 0,
+      latSum = 0,
+      longSum = 0;
+
+    this.state.orderList.forEach(item => {
+      if (latMax === 0 && latMin === 0 && longMin === 0 && longMin === 0) {
+        latMax = item.latitude;
+        latMin = item.latitude;
+        longMax = item.longitude;
+        longMin = item.longitude;
+      }
+      if (item.latitude < latMin) {
+        latMin = item.latitude;
+      } else {
+        if (item.latitude > latMax) {
+          latMax = item.latitude;
+        }
+      }
+      if (item.longitude < longMin) {
+        longMin = item.longitude;
+      } else {
+        if (item.longitude > longMax) {
+          longMax = item.longitude;
+        }
+      }
+      latSum += item.latitude;
+      longSum += item.longitude;
+    });
+
+    let latDelta = latMax - latMin + 0.02;
+    let longDelta = longMax - longMin + 0.02;
+    let latAvg = latSum / this.state.orderList.length;
+    let longAvg = longSum / this.state.orderList.length;
+
+    this.refs.map.animateToRegion(
+      {
+        latitude: latAvg,
+        longitude: longAvg,
+        latitudeDelta: latDelta,
+        longitudeDelta: longDelta
+      },
+      1500
+    );
   };
 
   getOrder = () => {
@@ -57,6 +128,7 @@ class personal extends Component {
     Axios.post(`${HOST_NAME}api/v1/order-list`, body)
       .then(res => {
         // console.log(res);
+        this.animate;
       })
       .catch(() => {
         // console.log(err);
@@ -91,54 +163,213 @@ class personal extends Component {
   };
 
   render() {
+    const { image } = this.state;
     return (
-      <View>
-        <CoordinatorLayout style={styles.coodinatorlayout}>
-          <MapView
-            ref="map"
-            showsUserLocation
-            moveOnMarkerPress
-            showsMyLocationButton
-            showsScale={false}
-            showsBuildings
-            showsCompass
-            provider={PROVIDER_GOOGLE} // remove if not using Google Maps
-            style={styles.container}
-            region={{
-              latitude: -6.175392,
-              longitude: 106.827153,
-              latitudeDelta: 0.0555,
-              longitudeDelta: 0.0521
-            }}
-            mapPadding={{
-              top: 20,
-              right: 0,
-              bottom: 250,
-              left: 0
-            }}>
-            {this.state.isMapReady ? (
-              <Marker
-                moveOnMarkerPress={true}
-                style={{ height: 50, width: 50 }}
-                coordinate={{
-                  latitude: -6.3302921,
-                  longitude: 106.6778804
-                }}>
-                <Image source={marker} style={{ height: 50, width: 45 }} />
-              </Marker>
-            ) : null}
-          </MapView>
-        </CoordinatorLayout>
-        <View style={styles.buttonWrapper}>
-          <TouchableNativeFeedback>
-            <View style={[styles.buttonBottom]}>
-              <Text xt style={styles.textButtonBottom}>
-                TAKE ORDER
-              </Text>
+      <CoordinatorLayout style={styles.coodinatorlayout}>
+        <MapView
+          ref="map"
+          showsUserLocation
+          moveOnMarkerPress
+          showsMyLocationButton
+          showsScale={false}
+          showsBuildings
+          showsCompass
+          provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+          style={styles.container}
+          region={{
+            latitude: -6.175392,
+            longitude: 106.827153,
+            latitudeDelta: 0.0555,
+            longitudeDelta: 0.0521
+          }}
+          mapPadding={{
+            top: 20,
+            right: 0,
+            bottom: 250,
+            left: 0
+          }}>
+          {this.state.isMapReady ? (
+            <Marker
+              moveOnMarkerPress={true}
+              style={{ height: 50, width: 50 }}
+              coordinate={{
+                latitude: -6.3302921,
+                longitude: 106.6778804
+              }}>
+              <Image source={marker} style={{ height: 50, width: 45 }} />
+            </Marker>
+          ) : null}
+        </MapView>
+        {this.state.isLoading ? (
+          <View style={styles.overlayLoading}>
+            <BottomSheetBehavior
+              ref="bottomSheet"
+              peekHeight={100}
+              hideable={false}
+              state={BottomSheetBehavior.STATE_HIDDEN}>
+              <View style={styles.parent}>
+                <ActivityIndicator size="large" color={Color.primary} />
+              </View>
+            </BottomSheetBehavior>
+          </View>
+        ) : this.state.isButton ? (
+          <View style={styles.overlayButton}>
+            <BottomSheetBehavior
+              ref="bottomSheet"
+              peekHeight={100}
+              hideable={false}
+              state={BottomSheetBehavior.STATE_HIDDEN}>
+              <View style={styles.parentButton}>
+                <TouchableNativeFeedback
+                  onPress={() => {
+                    this.setState({
+                      isButton: false,
+                      isCheckbox: false,
+                      isLoading: false
+                    });
+                  }}>
+                  <View style={[styles.buttonBottom, styles.activeButton]}>
+                    <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
+                  </View>
+                </TouchableNativeFeedback>
+              </View>
+            </BottomSheetBehavior>
+          </View>
+        ) : this.state.isCheckbox ? (
+          <View style={styles.overlayCheckbox}>
+            <BottomSheetBehavior
+              ref="bottomSheet"
+              peekHeight={100}
+              hideable={false}
+              state={BottomSheetBehavior.STATE_HIDDEN}>
+              <View style={styles.parentCheckbox}>
+                <Text style={styles.textTitle}>Let's Check Your</Text>
+                <TouchableOpacity style={styles.checkboxWrapper}>
+                  <CheckBox />
+                  <Text>I'm OTW</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.checkboxWrapper}>
+                  <CheckBox />
+                  <Text>Observasi</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.checkboxWrapper}>
+                  <CheckBox />
+                  <Text>Proses Perbaikan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.checkboxWrapper}>
+                  <CheckBox />
+                  <Text>Selesai</Text>
+                </TouchableOpacity>
+                <TouchableNativeFeedback>
+                  <View style={styles.button}>
+                    <Text style={styles.textButton}>Done</Text>
+                  </View>
+                </TouchableNativeFeedback>
+              </View>
+            </BottomSheetBehavior>
+          </View>
+        ) : (
+          <BottomSheetBehavior
+            ref="bottomSheet"
+            peekHeight={250}
+            hideable={false}
+            state={BottomSheetBehavior.STATE_COLLAPSED}>
+            <View style={{ height: height, backgroundColor: '#fff' }}>
+              <FontAwesome5
+                style={styles.icon}
+                name="grip-lines"
+                size={18}
+                color="#c9c9c9"
+              />
+              <View style={styles.miniContainer}>
+                <Text style={styles.textTitle}>Where are you ?</Text>
+                <View
+                  style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Input your location"
+                    onFocus={() =>
+                      this.refs.bottomSheet.setBottomSheetState(
+                        BottomSheetBehavior.STATE_EXPANDED
+                      )
+                    }
+                    onChangeText={text =>
+                      this.setState({ inputLocation: text })
+                    }
+                    value={this.state.inputLocation}
+                  />
+                </View>
+                <View
+                  style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                  <FontAwesome5
+                    style={styles.iconInput}
+                    name="edit"
+                    color="grey"
+                    size={16}
+                  />
+                  <TextInput
+                    style={styles.miniInput}
+                    placeholder="Input detail location"
+                    onFocus={() =>
+                      this.refs.bottomSheet.setBottomSheetState(
+                        BottomSheetBehavior.STATE_EXPANDED
+                      )
+                    }
+                    onChangeText={text =>
+                      this.setState({ inputDetailLocation: text })
+                    }
+                    value={this.state.inputDetailLocation}
+                  />
+                </View>
+              </View>
+              <View style={styles.miniContainer}>
+                <Text style={styles.textTitle}>Whats your problem ?</Text>
+                <View
+                  style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Input your problem"
+                    onFocus={() =>
+                      this.refs.bottomSheet.setBottomSheetState(
+                        BottomSheetBehavior.STATE_EXPANDED
+                      )
+                    }
+                    onChangeText={text => this.setState({ inputProblem: text })}
+                    value={this.state.inputProblem}
+                  />
+                </View>
+              </View>
+              <View style={styles.miniContainer}>
+                <Text style={styles.textTitle}>Post a Picture!</Text>
+                <TouchableOpacity
+                  style={styles.image}
+                  onPress={this.onImageClick}>
+                  {image ? (
+                    <Image source={{ uri: image }} style={styles.image} />
+                  ) : (
+                    <View style={styles.image}>
+                      <FontAwesome5 name="camera" color="grey" size={24} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.miniContainer}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    await this.setState({
+                      isCheckbox: true,
+                      isLoading: false,
+                      isButton: false
+                    });
+                  }}
+                  style={styles.button}>
+                  <Text style={styles.textButton}>Submit</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </TouchableNativeFeedback>
-        </View>
-      </View>
+          </BottomSheetBehavior>
+        )}
+      </CoordinatorLayout>
     );
   }
 }
@@ -239,25 +470,47 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'flex-end'
   },
-  buttonWrapper: {
+  overlayButton: {
+    zIndex: 0,
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    height: '100%',
     width: '100%',
-    position: 'absolute',
-    bottom: 0
+    justifyContent: 'flex-end'
+  },
+  overlayCheckbox: {
+    zIndex: 0,
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    height: '100%',
+    width: '100%',
+    justifyContent: 'flex-end'
+  },
+  parentButton: {
+    width: '100%',
+    padding: 15
+  },
+  parentCheckbox: {
+    width: '100%',
+    backgroundColor: 'white',
+    padding: 15
   },
   buttonBottom: {
-    width: '90%',
-    margin: 15,
+    backgroundColor: '#b5b5b5',
     padding: 15,
-    borderRadius: 5,
-    backgroundColor: '#b5b5b5'
+    borderRadius: 5
   },
-  buttonActive: {
-    backgroundColor: '#009c7c'
+  activeButton: {
+    backgroundColor: Color.primary
   },
   textButtonBottom: {
     textAlign: 'center',
-    color: 'white',
     fontSize: 16,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: 'white'
+  },
+  checkboxWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center'
   }
 });
