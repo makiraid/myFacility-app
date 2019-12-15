@@ -1,5 +1,5 @@
 const initialState = {
-  data: ''
+  data: []
 };
 
 const order = (state = initialState, action) => {
@@ -7,7 +7,7 @@ const order = (state = initialState, action) => {
     case 'GET_ORDER_FULFILLED':
       return {
         ...state,
-        data: action.payload.data
+        data: action.payload
       };
 
     default:

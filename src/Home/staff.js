@@ -77,9 +77,9 @@ class personal extends Component {
       token: token
     };
     Axios.post(`${HOST_NAME}api/v1/order-list`, body)
-      .then(res => {
-        // console.log(res);
-        this.animate();
+      .then(async res => {
+        await this.props.setOrderData(res.data.orders);
+        this.animate(res.data.orders);
       })
       .catch(() => {
         // console.log(err);
@@ -89,7 +89,7 @@ class personal extends Component {
       });
   };
 
-  animate = () => {
+  animate = order => {
     let latMin = 0,
       latMax = 0,
       longMin = 0,
@@ -97,35 +97,43 @@ class personal extends Component {
       latSum = 0,
       longSum = 0;
 
-    this.state.orderList.forEach(item => {
+    order.forEach(item => {
+      const split = item.locationcoor.split(',');
+      let lat = split[0];
+      let long = split[1];
+
+      // eslint-disable-next-line radix
+      lat = parseFloat(lat);
+      long = parseFloat(long);
+
       if (latMax === 0 && latMin === 0 && longMin === 0 && longMin === 0) {
-        latMax = item.latitude;
-        latMin = item.latitude;
-        longMax = item.longitude;
-        longMin = item.longitude;
+        latMax = lat;
+        latMin = lat;
+        longMax = long;
+        longMin = long;
       }
-      if (item.latitude < latMin) {
-        latMin = item.latitude;
+      if (lat < latMin) {
+        latMin = lat;
       } else {
-        if (item.latitude > latMax) {
-          latMax = item.latitude;
+        if (lat > latMax) {
+          latMax = lat;
         }
       }
-      if (item.longitude < longMin) {
-        longMin = item.longitude;
+      if (long < longMin) {
+        longMin = long;
       } else {
-        if (item.longitude > longMax) {
-          longMax = item.longitude;
+        if (long > longMax) {
+          longMax = long;
         }
       }
-      latSum += item.latitude;
-      longSum += item.longitude;
+      latSum += lat;
+      longSum += long;
     });
 
     let latDelta = latMax - latMin + 0.02;
     let longDelta = longMax - longMin + 0.02;
-    let latAvg = latSum / this.state.orderList.length;
-    let longAvg = longSum / this.state.orderList.length;
+    let latAvg = latSum / order.length;
+    let longAvg = longSum / order.length;
 
     setTimeout(() => {
       this.onChangeLayout(latAvg, longAvg, latDelta, longDelta);
@@ -359,10 +367,22 @@ class personal extends Component {
 }
 
 const mapStateToProps = state => ({
-  auth: state.auth.authToken
+  auth: state.auth.authToken,
+  order: state.order.data
 });
 
-export default connect(mapStateToProps)(personal);
+const mapDispatchToProps = dispatch => ({
+  setOrderData: payload =>
+    dispatch({
+      payload,
+      type: 'GET_ORDER_FULFILLED'
+    })
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(personal);
 
 const styles = StyleSheet.create({
   coodinatorlayout: {
