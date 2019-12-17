@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { Component } from 'react';
 import {
   Text,
@@ -7,19 +8,20 @@ import {
   TextInput,
   Image,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  PermissionsAndroid
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Geolocation from '@react-native-community/geolocation';
 import {
   CoordinatorLayout,
   BottomSheetBehavior
 } from 'react-native-bottom-sheet-behavior';
+import Axios from 'axios';
 import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
-import Axios from 'axios';
-import { HOST_NAME } from 'react-native-dotenv';
 import { connect } from 'react-redux';
 
 const height = Dimensions.get('window').height;
@@ -31,45 +33,114 @@ const options = {
     path: 'myfacilityapp'
   }
 };
+let data = false;
 const marker = require('../Public/Assets/icon/marker.png');
+const HOST_NAME = 'https://apidev.riskymakira.com/';
 class personal extends Component {
   static navigationOptions = {
     header: null
   };
 
-  componentDidMount() {
-    this.getOrder();
+  constructor() {
+    super();
+    this.state = {
+      isMapReady: false,
+      image: '',
+      imagedata: {
+        uri: '',
+        type: '',
+        name: ''
+      },
+      inputLocation: '',
+      inputDetailLocation: '',
+      inputProblem: '',
+      status: 0,
+      region: {
+        latitude: -6.175392,
+        longitude: 106.827153,
+        latitudeDelta: 0.0555,
+        longitudeDelta: 0.0521
+      },
+      markerRegion: {
+        latitude: '',
+        longitude: ''
+      },
+      locationName: 'Input your location',
+      isLoading: false,
+      changeLocation: false
+    };
   }
 
-  state = {
-    isMapReady: false,
-    image: '',
-    inputLocation: '',
-    inputDetailLocation: '',
-    inputProblem: '',
-    status: 0,
-    isLoading: false
+  componentDidMount = async () => {
+    await Geolocation.getCurrentPosition(async info => {
+      await this.setState({
+        markerRegion: {
+          latitude: info.coords.latitude,
+          longitude: info.coords.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005
+        },
+        isMapReady: true
+      });
+    });
+    await this.onChangeLayout();
   };
 
-  getOrder = () => {
-    const { userCode, token } = this.props.auth;
+  withchangeLocation = () => {
     this.setState({
+      region: {
+        latitude: this.state.markerRegion.latitude,
+        longitude: this.state.markerRegion.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+        changeLocation: !this.state.changeLocation
+      }
+    });
+    data = !data;
+  };
+
+  handleChangeRegion = info => {
+    this.setState({
+      region: info,
+      markerRegion: {
+        latitude: info.latitude,
+        longitude: info.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005
+      },
       isLoading: true
     });
     const body = {
-      userCode: userCode,
-      token: token
+      // eslint-disable-next-line prettier/prettier
+      latlong: `${this.state.markerRegion.latitude}, ${this.state.markerRegion.longitude}`
     };
-    Axios.post(`${HOST_NAME}api/v1/order-list`, body)
+    Axios.post(`${HOST_NAME}api/v1/geocoding`, body)
       .then(res => {
-        // console.log(res);
+        this.setState({
+          inputLocation: res.data.locationName
+        });
       })
-      .catch(err => {
+      .catch(() => {
         // console.log(err);
       })
       .finally(() => {
         this.setState({ isLoading: false });
       });
+  };
+
+  requestPermissionLocation = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Location permisson granted');
+      } else {
+        console.log('Location permission denied');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
   };
 
   onImageClick = async () => {
@@ -78,26 +149,62 @@ class personal extends Component {
         toast('Cancel image pick');
       } else {
         this.setState({
-          image: response.uri
+          image: response.uri,
+          imagedata: {
+            uri: response.uri,
+            type: response.type,
+            name: response.fileName
+          }
         });
       }
     });
   };
 
   onChangeLayout = async () => {
-    await this.refs.map.animateToRegion(
-      {
-        latitude: -6.3302921,
-        longitude: 106.6778804,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02
-      },
-      2000
-    );
+    let { markerRegion, isMapReady } = this.state;
+    if (isMapReady === true) {
+      setTimeout(() => this.refs.map.animateToRegion(markerRegion, 2000), 200);
+    }
+  };
+
+  handleSubmitOrder = () => {
+    const { userCode, token } = this.props.auth;
+    this.setState({
+      isLoading: true
+    });
+    // eslint-disable-next-line no-shadow
+    let data = new FormData();
+    // eslint-disable-next-line no-sequences
+    data.append('userCode', userCode),
+      data.append('token', token),
+      data.append(
+        'locationCoor',
+        // eslint-disable-next-line prettier/prettier
+        `${this.state.markerRegion.latitude}, ${this.state.markerRegion.longitude}`
+      ),
+      data.append('locationName', this.state.inputLocation),
+      data.append('locationDetail', this.state.inputDetailLocation),
+      data.append('problemDetail', this.state.inputProblem),
+      data.append('problemPic', this.state.imagedata);
+
+    Axios.post(`${HOST_NAME}api/v1/order-submit`, data)
+      .then(async res => {
+        this.setState({
+          status: 1,
+          isMapReady: true
+        });
+        console.warn(res);
+      })
+      .catch(() => {
+        // console.log(err);
+      })
+      .finally(() => {
+        this.setState({ isLoading: false });
+      });
   };
 
   render() {
-    const { image } = this.state;
+    const { image, markerRegion, region, status } = this.state;
     return (
       <CoordinatorLayout style={styles.coodinatorlayout}>
         <MapView
@@ -105,34 +212,42 @@ class personal extends Component {
           showsUserLocation
           moveOnMarkerPress
           showsMyLocationButton
+          onMapReady={this.onChangeLayout}
           showsScale={false}
           showsBuildings
           showsCompass
           provider={PROVIDER_GOOGLE} // remove if not using Google Maps
           style={styles.container}
-          region={{
-            latitude: -6.175392,
-            longitude: 106.827153,
-            latitudeDelta: 0.0555,
-            longitudeDelta: 0.0521
-          }}
+          onRegionChangeComplete={
+            status === 0 && data === true ? this.handleChangeRegion : null
+          }
+          region={region}
           mapPadding={{
             top: 20,
             right: 0,
             bottom: 250,
             left: 0
           }}>
-          {this.state.isMapReady ? (
+          {this.state.isMapReady && data === false ? (
             <Marker
               moveOnMarkerPress={true}
               style={{ height: 50, width: 50 }}
               coordinate={{
-                latitude: -6.3302921,
-                longitude: 106.6778804
+                latitude: markerRegion.latitude,
+                longitude: markerRegion.longitude
               }}>
               <Image source={marker} style={{ height: 50, width: 45 }} />
             </Marker>
-          ) : null}
+          ) : (
+            <Marker
+              moveOnMarkerPress={true}
+              style={{ height: 50, width: 50 }}
+              coordinate={{
+                latitude: markerRegion.latitude,
+                longitude: markerRegion.longitude
+              }}
+            />
+          )}
         </MapView>
         {this.state.isLoading ? (
           <View style={styles.overlayLoading}>
@@ -152,7 +267,7 @@ class personal extends Component {
             peekHeight={250}
             hideable={false}
             state={BottomSheetBehavior.STATE_COLLAPSED}>
-            {this.state.status == 0 ? (
+            {this.state.status === 0 ? (
               <View style={{ height: height, backgroundColor: '#fff' }}>
                 <FontAwesome5
                   style={styles.icon}
@@ -163,9 +278,14 @@ class personal extends Component {
                 <View style={styles.miniContainer}>
                   <Text style={styles.textTitle}>Where are you ?</Text>
                   <View
-                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
+                    style={[
+                      styles.wrapperForm,
+                      styles.wrapperDetailLocation,
+                      { justifyContent: 'space-between' }
+                    ]}>
                     <TextInput
                       style={styles.input}
+                      multiline={true}
                       placeholder="Input your location"
                       onFocus={() =>
                         this.refs.bottomSheet.setBottomSheetState(
@@ -177,6 +297,14 @@ class personal extends Component {
                       }
                       value={this.state.inputLocation}
                     />
+                    <TouchableOpacity
+                      onPress={this.withchangeLocation}
+                      style={styles.changeLocation}>
+                      <FontAwesome5
+                        name={data === true ? 'check' : 'map'}
+                        color="white"
+                      />
+                    </TouchableOpacity>
                   </View>
                   <View
                     style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
@@ -236,14 +364,7 @@ class personal extends Component {
                 </View>
                 <View style={styles.miniContainer}>
                   <TouchableOpacity
-                    onPress={async () => {
-                      await this.setState({
-                        isLoading: true,
-                        status: 1,
-                        isMapReady: true
-                      });
-                      await this.onChangeLayout();
-                    }}
+                    onPress={this.handleSubmitOrder}
                     style={styles.button}>
                     <Text style={styles.textButton}>Submit</Text>
                   </TouchableOpacity>
@@ -385,13 +506,15 @@ const styles = StyleSheet.create({
   input: {
     zIndex: 1,
     fontSize: 12,
-    padding: 8
+    padding: 8,
+    width: '70%'
   },
   miniInput: {
     zIndex: 1,
     fontSize: 12,
     padding: 5,
-    paddingLeft: 0
+    paddingLeft: 0,
+    width: '70%'
   },
   wrapperDetailLocation: {
     marginTop: 8,
@@ -441,5 +564,13 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%',
     justifyContent: 'flex-end'
+  },
+  changeLocation: {
+    height: 40,
+    width: 40,
+    backgroundColor: Color.primary,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });
