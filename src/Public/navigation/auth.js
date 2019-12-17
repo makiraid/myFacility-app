@@ -5,11 +5,13 @@ import {
 
 import Login from '../../Auth/Login';
 import Register from '../../Auth/Register';
+import Verify from '../../Auth/Verify';
 
 export default createStackNavigator(
   {
     Login,
-    Register
+    Register,
+    Verify
   },
   {
     headerMode: 'none',

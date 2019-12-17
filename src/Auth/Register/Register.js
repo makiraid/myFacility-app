@@ -12,8 +12,9 @@ import { connect } from 'react-redux';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import Color from '../../Public/Color';
-import config from '../../Public/config/config';
+import { HOST_NAME } from 'react-native-dotenv';
 import { toast } from '../../Public/components';
+import Axios from 'axios';
 
 class Register extends Component {
   constructor() {
@@ -45,31 +46,27 @@ class Register extends Component {
     this.setState({ submitLogin: true });
     if (username == '' && email == '' && password == '') {
       this.setState({ submitLogin: false });
-      toast('Silahkan Lengkapi Data');
+      toast('Complete the empty forms');
     } else {
-      let data = await config.post('api/v1/sign-up', {
+      Axios.post(`${HOST_NAME}api/v1/sign-up`, {
         name: username,
         email: email,
         password: password,
         role: role.staff ? 2 : 1
-      });
-      await this.props.setDataRegister(data);
-      let message = '';
-      config
-        .post('api/v1/sign-in', {
-          email: email,
-          password: password
+      })
+        .then(async res => {
+          await this.props.setDataRegister(res);
+          const info = {
+            email: email,
+            password: password
+          };
+          await this.props.navigation.navigate('Verify', { data: info });
         })
-        .then(res => {
-          message = res.data.resultDesc;
-          if (message === 'Success !') {
-            this.props.setDataLogin(res);
-            this.props.navigation.navigate('App');
-            this.setState({ submitLogin: false });
-          } else {
-            this.setState({ submitLogin: false });
-            toast(message);
-          }
+        .catch(err => {
+          toast(JSON.stringify(err.message));
+        })
+        .finally(() => {
+          this.setState({ submitLogin: false });
         });
     }
   };
@@ -159,7 +156,10 @@ class Register extends Component {
         <TouchableNativeFeedback onPress={() => this.handleRegister()}>
           <View style={styles.button}>
             {submitLogin ? (
-              <ActivityIndicator style={styles.textButton} />
+              <ActivityIndicator
+                color={Color.Background}
+                style={styles.textButton}
+              />
             ) : (
               <Text style={styles.textButton}>Daftar</Text>
             )}
