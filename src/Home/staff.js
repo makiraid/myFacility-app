@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TouchableNativeFeedback,
-  CheckBox
+  CheckBox,
+  Alert
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -21,7 +22,10 @@ import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
 import Axios from 'axios';
-import { HOST_NAME } from 'react-native-dotenv';
+import io from 'socket.io-client';
+// import { HOST_NAME } from 'react-native-dotenv';
+const HOST_NAME = 'https://apidev-complainer.archv.id/';
+const SOCKET_HOST = 'http://35.240.193.202:3001/';
 import { connect } from 'react-redux';
 
 const height = Dimensions.get('window').height;
@@ -39,6 +43,11 @@ class personal extends Component {
     header: null
   };
 
+  constructor() {
+    super();
+    this.getOrder = this.getOrder.bind(this);
+  }
+
   componentDidMount() {
     this.getOrder();
   }
@@ -49,17 +58,23 @@ class personal extends Component {
     inputLocation: '',
     inputDetailLocation: '',
     inputProblem: '',
+    orderId: '',
     status: 0,
     isLoading: false,
     isButton: true,
     isCheckbox: false,
-    markerActive: {}
+    markerActive: {},
+    dataActive: null,
+    statusType: 1,
+    isAnimate: false
+    // statusOrder: 1
   };
 
   getOrder = () => {
     const { userCode, token } = this.props.auth;
     this.setState({
-      isLoading: true
+      isLoading: true,
+      statusType: 1
     });
     const body = {
       userCode: userCode,
@@ -68,7 +83,7 @@ class personal extends Component {
     Axios.post(`${HOST_NAME}api/v1/order-list`, body)
       .then(async res => {
         await this.props.setOrderData(res.data.orders);
-        this.animate(res.data.orders);
+        await this.animate(res.data.orders);
       })
       .catch(() => {
         // console.log(err);
@@ -76,6 +91,75 @@ class personal extends Component {
       .finally(() => {
         this.setState({ isLoading: false });
       });
+  };
+
+  takeOrder = () => {
+    const { userCode, token } = this.props.auth;
+    const { orderId } = this.state;
+    this.setState({
+      isLoading: true
+    });
+    const body = {
+      userCode: userCode,
+      token: token,
+      orderId
+    };
+    Axios.post(`${HOST_NAME}api/v1/order-take`, body)
+      .then(async res => {
+        // await this.props.setOrderData(res.data.orders);
+        // this.animate(res.data.orders);
+      })
+      .catch(() => {
+        // console.log(err);
+      })
+      .finally(() => {
+        this.setState({ isLoading: false });
+      });
+  };
+
+  updateStatus = () => {
+    const { userCode, token } = this.props.auth;
+    const { orderId, statusType } = this.state;
+    const socket = io(`${SOCKET_HOST}socket/v1/order-update`);
+    socket.emit('update', {
+      userCode: userCode,
+      token: token,
+      orderId,
+      orderStatus: statusType
+    });
+  };
+
+  resetData = async () => {
+    await this.setState({
+      statusType: 4
+    });
+    await this.updateStatus();
+    await this.setState({
+      markerActive: {},
+      isButton: true,
+      isCheckbox: false,
+      isLoading: false,
+      statusOrder: 1
+    });
+    await this.getOrder();
+  };
+
+  returnModal = () => {
+    Alert.alert(
+      '',
+      'Apakah anda yakin untuk menyelesaikan orderan?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'OK',
+          onPress: () => this.resetData()
+        }
+      ],
+      { cancelable: true }
+    );
   };
 
   animate = order => {
@@ -140,6 +224,10 @@ class personal extends Component {
     });
   };
 
+  confirmOrder = async () => {
+    this.openModal();
+  };
+
   onChangeLayout = async (lang, long, langDelta, longDelta) => {
     await this.refs.map.animateToRegion(
       {
@@ -178,42 +266,49 @@ class personal extends Component {
             bottom: 250,
             left: 0
           }}>
-          {!this.state.isMapReady
-            ? null
-            : this.props.order.map(item => {
-                const split = item.locationcoor.split(',');
-                const lat = Number(split[0]);
-                const long = Number(split[1]);
-                const markerDisable = require('../Public/Assets/icon/marker-disable.jpg');
-                return (
-                  <Marker
-                    moveOnMarkerPress={true}
-                    style={{ height: 50, width: 50 }}
-                    onPress={() => {
-                      this.onChangeLayout(lat, long, 0.02, 0.02);
-                      this.setState({
-                        markerActive: item,
-                        isButton: true,
-                        isCheckbox: false,
-                        isLoading: false
-                      });
-                    }}
-                    coordinate={{
-                      latitude: lat,
-                      longitude: long
-                    }}>
-                    <Image
-                      source={
-                        this.state.markerActive &&
-                        this.state.markerActive.orderid === item.orderid
-                          ? marker
-                          : markerDisable
-                      }
-                      style={{ height: 50, width: 45 }}
-                    />
-                  </Marker>
-                );
-              })}
+          {!this.state.isMapReady ? null : !this.props.order ? (
+            <Text>{this.props.auth.name}</Text>
+          ) : (
+            this.props.order.map(item => {
+              const split = item.locationcoor.split(',');
+              const lat = Number(split[0]);
+              const long = Number(split[1]);
+              const markerDisable = require('../Public/Assets/icon/marker-disable.jpg');
+              return (
+                <Marker
+                  moveOnMarkerPress={true}
+                  style={{ height: 50, width: 50 }}
+                  onPress={async () => {
+                    this.onChangeLayout(lat, long, 0.02, 0.02);
+                    this.setState({
+                      markerActive: item,
+                      isButton: true,
+                      isCheckbox: false,
+                      isLoading: false,
+                      inputLocation: item.locationname,
+                      inputDetailLocation: item.locationdetail,
+                      inputProblem: item.problemdetail,
+                      orderId: item.orderid,
+                      image: item.problempic
+                    });
+                  }}
+                  coordinate={{
+                    latitude: lat,
+                    longitude: long
+                  }}>
+                  <Image
+                    source={
+                      this.state.markerActive &&
+                      this.state.markerActive.orderid === item.orderid
+                        ? marker
+                        : markerDisable
+                    }
+                    style={{ height: 50, width: 45 }}
+                  />
+                </Marker>
+              );
+            })
+          )}
         </MapView>
         {this.state.isLoading ? (
           <View style={styles.overlayLoading}>
@@ -261,22 +356,32 @@ class personal extends Component {
               <View style={styles.parentCheckbox}>
                 <Text style={styles.textTitle}>Let's Check Your</Text>
                 <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox />
+                  <CheckBox value={true} />
                   <Text>I'm OTW</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox />
+                  <CheckBox
+                    onValueChange={async () => {
+                      await this.setState({
+                        statusType: 2
+                      });
+                      this.updateStatus();
+                    }}
+                  />
                   <Text>Observasi</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox />
+                  <CheckBox
+                    onValueChange={async () => {
+                      await this.setState({
+                        statusType: 3
+                      });
+                      this.updateStatus();
+                    }}
+                  />
                   <Text>Proses Perbaikan</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox />
-                  <Text>Selesai</Text>
-                </TouchableOpacity>
-                <TouchableNativeFeedback>
+                <TouchableNativeFeedback onPress={() => this.returnModal()}>
                   <View style={styles.button}>
                     <Text style={styles.textButton}>Done</Text>
                   </View>
@@ -296,6 +401,7 @@ class personal extends Component {
                     style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
                     <TextInput
                       style={styles.input}
+                      editable={false}
                       placeholder="Input your location"
                       onFocus={() =>
                         this.refs.bottomSheet.setBottomSheetState(
@@ -318,6 +424,7 @@ class personal extends Component {
                     />
                     <TextInput
                       style={styles.miniInput}
+                      editable={false}
                       placeholder="Input detail location"
                       onFocus={() =>
                         this.refs.bottomSheet.setBottomSheetState(
@@ -337,6 +444,7 @@ class personal extends Component {
                     style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
                     <TextInput
                       style={styles.input}
+                      editable={false}
                       placeholder="Input your problem"
                       onFocus={() =>
                         this.refs.bottomSheet.setBottomSheetState(
@@ -352,9 +460,7 @@ class personal extends Component {
                 </View>
                 <View style={styles.miniContainer}>
                   <Text style={styles.textTitle}>Post a Picture!</Text>
-                  <TouchableOpacity
-                    style={styles.image}
-                    onPress={this.onImageClick}>
+                  <TouchableOpacity style={styles.image}>
                     {image ? (
                       <Image source={{ uri: image }} style={styles.image} />
                     ) : (
@@ -367,6 +473,7 @@ class personal extends Component {
                 <View style={styles.miniContainer}>
                   <TouchableOpacity
                     onPress={async () => {
+                      await this.takeOrder();
                       await this.setState({
                         isCheckbox: true,
                         isLoading: false,
@@ -374,7 +481,7 @@ class personal extends Component {
                       });
                     }}
                     style={styles.button}>
-                    <Text style={styles.textButton}>Submit</Text>
+                    <Text style={styles.textButton}>Confirm</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -536,5 +643,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center'
+  },
+  modalContainer: {
+    paddingTop: 250,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15
+  },
+  innerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    height: 200,
+    width: '80%',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff'
   }
 });

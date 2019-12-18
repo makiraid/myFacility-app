@@ -13,7 +13,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import Color from '../../Public/Color';
 import { toast } from '../../Public/components';
-import { HOST_NAME } from 'react-native-dotenv';
+// import { HOST_NAME } from 'react-native-dotenv';
+const HOST_NAME = 'https://apidev.riskymakira.com/';
 import Axios from 'axios';
 
 class Login extends Component {

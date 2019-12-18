@@ -19,7 +19,8 @@ import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
 import Axios from 'axios';
-import { HOST_NAME } from 'react-native-dotenv';
+// import { HOST_NAME } from 'react-native-dotenv';
+const HOST_NAME = 'https://apidev-complainer.archv.id/';
 import { connect } from 'react-redux';
 
 const height = Dimensions.get('window').height;
