@@ -14,7 +14,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Color from '../../Public/Color';
 import { toast } from '../../Public/components';
 // import { HOST_NAME } from 'react-native-dotenv';
-const HOST_NAME = 'https://apidev.riskymakira.com/';
+// const HOST_NAME = 'https://apidev.riskymakira.com/';
 import Axios from 'axios';
 
 class Login extends Component {
@@ -34,13 +34,14 @@ class Login extends Component {
   };
 
   onRequestLogin = (e, p) => {
+    const URL = 'https://apidev.riskymakira.com/';
     this.setState({ isLoading: true });
     const body = {
       email: e,
       password: p
     };
 
-    Axios.post(`${HOST_NAME}api/v1/sign-in`, body)
+    Axios.post(`${URL}api/v1/sign-in`, body)
       .then(res => {
         const resp = res.data;
         if (resp.resultCode === 0) {

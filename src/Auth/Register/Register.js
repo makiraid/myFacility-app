@@ -44,7 +44,7 @@ class Register extends Component {
   handleRegister = async () => {
     let { username, email, password, role } = this.state;
     this.setState({ submitLogin: true });
-    if (username == '' && email == '' && password == '') {
+    if (username === '' && email === '' && password === '') {
       this.setState({ submitLogin: false });
       toast('Complete the empty forms');
     } else {
