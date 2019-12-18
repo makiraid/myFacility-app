@@ -9,7 +9,8 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  PermissionsAndroid
+  PermissionsAndroid,
+  CheckBox
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -18,6 +19,7 @@ import {
   CoordinatorLayout,
   BottomSheetBehavior
 } from 'react-native-bottom-sheet-behavior';
+// import SocketIOClient from 'socket.io-client';
 import Axios from 'axios';
 import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
@@ -30,6 +32,7 @@ const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 const options = {
   title: 'Select Photo',
+  quality: 0.5,
   storageOptions: {
     skipBackup: true,
     path: 'myfacilityapp'
@@ -37,6 +40,24 @@ const options = {
 };
 let data = false;
 const marker = require('../Public/Assets/icon/marker.png');
+const listMaintenance = [
+  {
+    id: 1,
+    title: 'Staff Menuju Lokasi Anda'
+  },
+  {
+    id: 2,
+    title: 'Observasi'
+  },
+  {
+    id: 3,
+    title: 'Proses Perbaikan'
+  },
+  {
+    id: 4,
+    title: 'Selesai'
+  }
+];
 class personal extends Component {
   static navigationOptions = {
     header: null
@@ -68,7 +89,8 @@ class personal extends Component {
       },
       locationName: 'Input your location',
       isLoading: false,
-      changeLocation: false
+      changeLocation: false,
+      idSocketStatus: 0
     };
   }
 
@@ -189,20 +211,48 @@ class personal extends Component {
       data.append('problemPic', this.state.imagedata);
 
     Axios.post(`${HOST_NAME}api/v1/order-submit`, data)
-      .then(async res => {
+      .then(res => {
         this.setState({
-          status: 1,
-          isMapReady: true
+          status: 1
         });
-        console.warn(res);
+        console.log(res.data);
+        toast('Sukses membuat pesanan' + res.data.orderId);
+        this.setSocketOn(res.data.orderId);
       })
       .catch(() => {
-        // console.log(err);
+        toast('Gagal membuat pesanan');
       })
       .finally(() => {
         this.setState({ isLoading: false });
       });
   };
+
+  setSocketOn = orderId => {
+    // const SOCKET_HOSTS = 'http://35.240.193.202:3001/';
+    // console.log(orderId);
+    // var socket = SocketIOClient(`${SOCKET_HOSTS}socket/v1/order-update`);
+    // socket.on(orderId, res => {
+    //   console.log(res);
+    // });
+
+    setInterval(async () => {
+      await Axios.post(`${HOST_NAME}api/v1/cek-status`, {
+        orderId
+      })
+        .then(res => {
+          this.setState({
+            idSocketStatus: res.data.orderStatus
+          });
+        })
+        .catch(() => {
+          toast('Error while getting status');
+        });
+    }, 36000);
+  };
+
+  componentWillUnmount() {
+    clearInterval();
+  }
 
   render() {
     const { image, markerRegion, region, status } = this.state;
@@ -286,6 +336,7 @@ class personal extends Component {
                     ]}>
                     <TextInput
                       style={styles.input}
+                      editable={false}
                       multiline={true}
                       placeholder="Input your location"
                       onFocus={() =>
@@ -439,7 +490,7 @@ class personal extends Component {
                           color: 'black',
                           marginLeft: 16
                         }}>
-                        Your name goes here
+                        {this.props.auth.name}
                       </Text>
                     </View>
                   </View>
@@ -458,6 +509,20 @@ class personal extends Component {
                     }}>
                     Maintenance Progress
                   </Text>
+                  <View style={styles.parentCheckbox}>
+                    {listMaintenance.map((item, index) => {
+                      let isActive = false;
+                      if (index + 1 <= this.state.idSocketStatus) {
+                        isActive = true;
+                      }
+                      return (
+                        <View key={index} style={styles.checkboxWrapper}>
+                          <CheckBox disabled={true} value={isActive} />
+                          <Text>{item.title}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
               </View>
             )}
@@ -573,5 +638,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  parentCheckbox: {
+    width: '100%',
+    backgroundColor: 'white'
+    // padding: 15
+  },
+  checkboxWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center'
   }
 });
