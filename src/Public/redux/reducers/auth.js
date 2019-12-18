@@ -19,6 +19,13 @@ const auth = (state = initialState, action) => {
         message: 'success'
       };
 
+    case 'LOGOUT_FULFILLED':
+      return {
+        authToken: {
+          role: null
+        }
+      };
+
     default:
       return state;
   }

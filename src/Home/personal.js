@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   PermissionsAndroid,
-  CheckBox
+  CheckBox,
+  Alert
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -22,6 +23,7 @@ import {
 // import SocketIOClient from 'socket.io-client';
 import Axios from 'axios';
 import ImagePicker from 'react-native-image-picker';
+
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
 // import { HOST_NAME } from 'react-native-dotenv';
@@ -90,7 +92,8 @@ class personal extends Component {
       locationName: 'Input your location',
       isLoading: false,
       changeLocation: false,
-      idSocketStatus: 0
+      idSocketStatus: 0,
+      hideLogout: false
     };
   }
 
@@ -254,22 +257,32 @@ class personal extends Component {
     clearInterval();
   }
 
+  handleLogout = () => {
+    Alert.alert(
+      'Log Out',
+      'Are u sure ?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => toast('Cancel log out'),
+          style: 'cancel'
+        },
+        {
+          text: 'OK',
+          onPress: async () => {
+            await this.props.logout();
+            // await navigation.navigate('Auth');
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+  };
+
   render() {
     const { image, markerRegion, region, status } = this.state;
     return (
       <React.Fragment>
-        <View
-          style={{
-            position: 'absolute',
-            zIndex: 2,
-            top: 64,
-            right: 16,
-            height: 20,
-            width: 20,
-            backgroundColor: 'grey'
-          }}>
-          <Text>X</Text>
-        </View>
         <CoordinatorLayout style={styles.coodinatorlayout}>
           <MapView
             ref="map"
@@ -313,6 +326,37 @@ class personal extends Component {
               />
             )}
           </MapView>
+          {data === true ? null : (
+            <View
+              style={{
+                position: 'absolute',
+                marginTop: 20,
+                height: height / 4,
+                width: '185%',
+                borderRadius: 5,
+                backgroundColor: 'transparent',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+              <TouchableOpacity
+                onPress={() => this.handleLogout(this.props.navigation)}
+                style={{
+                  height: 40,
+                  width: 40,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'white',
+                  borderRadius: 5,
+                  elevation: 4
+                }}>
+                <FontAwesome5
+                  name="sign-out-alt"
+                  size={25}
+                  color={Color.quarternary}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
           {this.state.isLoading ? (
             <View style={styles.overlayLoading}>
               <BottomSheetBehavior
@@ -332,7 +376,11 @@ class personal extends Component {
               hideable={false}
               state={BottomSheetBehavior.STATE_COLLAPSED}>
               {this.state.status === 0 ? (
-                <View style={{ height: height, backgroundColor: '#fff' }}>
+                <View
+                  style={{
+                    height: height,
+                    backgroundColor: '#fff'
+                  }}>
                   <FontAwesome5
                     style={styles.icon}
                     name="grip-lines"
@@ -557,7 +605,16 @@ const mapStateToProps = state => ({
   auth: state.auth.authToken
 });
 
-export default connect(mapStateToProps)(personal);
+const mapDispatchToProps = dispatch => ({
+  logout: payload =>
+    dispatch({
+      type: 'LOGOUT_FULFILLED',
+      payload
+    })
+});
+
+// eslint-disable-next-line prettier/prettier
+export default connect(mapStateToProps, mapDispatchToProps)(personal);
 
 const styles = StyleSheet.create({
   coodinatorlayout: {
