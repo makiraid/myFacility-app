@@ -54,13 +54,28 @@ class Register extends Component {
         password: password,
         role: role.staff ? 2 : 1
       })
-        .then(async res => {
-          await this.props.setDataRegister(res);
+        .then(async response => {
           const info = {
             email: email,
             password: password
           };
-          await this.props.navigation.navigate('Verify', { data: info });
+          Axios.post(`${HOST_NAME}api/v1/sign-in`, info)
+            .then(res => {
+              const resp = res.data;
+              if (resp.resultCode === 0) {
+                this.props.setDataLogin(res);
+                this.props.navigation.navigate('App');
+              } else {
+                toast(resp.resultDesc);
+              }
+            })
+            .catch(err => {
+              toast(JSON.stringify(err.message));
+            })
+            .finally(() => {
+              this.setState({ isLoading: false });
+            });
+          await this.props.navigation.navigate('App');
         })
         .catch(err => {
           toast(JSON.stringify(err.message));
@@ -189,10 +204,8 @@ const mapDispatchToProps = dispatch => ({
     })
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Register);
+// eslint-disable-next-line prettier/prettier
+export default connect(mapStateToProps, mapDispatchToProps)(Register);
 
 const styles = StyleSheet.create({
   container: {
