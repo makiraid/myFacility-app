@@ -13,7 +13,7 @@ import {
   CheckBox,
   Alert
 } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Geolocation from '@react-native-community/geolocation';
 import {
@@ -41,7 +41,7 @@ const options = {
   }
 };
 let data = false;
-const marker = require('../Public/Assets/icon/marker.png');
+// const marker = require('../Public/Assets/icon/marker.png');
 const listMaintenance = [
   {
     id: 1,
@@ -98,7 +98,7 @@ class personal extends Component {
   }
 
   componentDidMount = async () => {
-    await Geolocation.getCurrentPosition(
+    Geolocation.getCurrentPosition(
       async info => {
         await this.setState({
           markerRegion: {
@@ -106,16 +106,15 @@ class personal extends Component {
             longitude: info.coords.longitude,
             latitudeDelta: 0.005,
             longitudeDelta: 0.005
-          },
-          isMapReady: true
+          }
         });
+        await this.onChangeLayout();
       },
       error => {
         toast('Error while getting your location');
       },
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
-    await this.onChangeLayout();
   };
 
   withchangeLocation = () => {
@@ -192,10 +191,13 @@ class personal extends Component {
     });
   };
 
-  onChangeLayout = async () => {
+  onChangeLayout = () => {
     let { markerRegion, isMapReady } = this.state;
     if (isMapReady === true) {
-      setTimeout(() => this.refs.map.animateToRegion(markerRegion, 2000), 200);
+      setTimeout(() => {
+        this.refs.map.animateToRegion(markerRegion, 2000);
+        this.setState({ isMapReady: true });
+      }, 500);
     }
   };
 
@@ -286,7 +288,7 @@ class personal extends Component {
   };
 
   render() {
-    const { image, markerRegion, region, status } = this.state;
+    const { image, region, status } = this.state;
     return (
       <React.Fragment>
         <CoordinatorLayout style={styles.coodinatorlayout}>
@@ -311,7 +313,7 @@ class personal extends Component {
               bottom: 250,
               left: 0
             }}>
-            {this.state.isMapReady && data === false ? (
+            {/* {this.state.isMapReady && data === false ? (
               <Marker
                 moveOnMarkerPress={true}
                 style={{ height: 50, width: 50 }}
@@ -330,7 +332,7 @@ class personal extends Component {
                   longitude: markerRegion.longitude
                 }}
               />
-            )}
+            )} */}
           </MapView>
           {data === true ? null : (
             <View
