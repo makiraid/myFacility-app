@@ -17,7 +17,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Geolocation from '@react-native-community/geolocation';
 import {
   CoordinatorLayout,
-  BottomSheetBehavior
+  BottomSheetBehavior,
+  FloatingActionButton
 } from 'react-native-bottom-sheet-behavior';
 // import SocketIOClient from 'socket.io-client';
 import Axios from 'axios';
@@ -92,7 +93,8 @@ class personal extends Component {
       isLoading: false,
       changeLocation: false,
       idSocketStatus: 0,
-      hideLogout: false
+      hideLogout: false,
+      isSearching: false
     };
   }
 
@@ -138,7 +140,7 @@ class personal extends Component {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005
       },
-      isLoading: true
+      isSearching: true
     });
     const body = {
       // eslint-disable-next-line prettier/prettier
@@ -154,7 +156,7 @@ class personal extends Component {
         // console.log(err);
       })
       .finally(() => {
-        this.setState({ isLoading: false });
+        this.setState({ isSearching: false });
       });
   };
 
@@ -281,6 +283,22 @@ class personal extends Component {
     const { image, region, status, markerRegion } = this.state;
     return (
       <React.Fragment>
+        {data === true ? (
+          <FloatingActionButton
+            autoAnchor
+            icon={'map-marker-alt'}
+            iconProvider={FontAwesome5}
+            backgroundColor={Color.tertiary}
+            iconColor={'white'}
+            style={{
+              position: 'absolute',
+              top: '29%',
+              right: '45%',
+              height: 50,
+              width: 50
+            }}
+          />
+        ) : null}
         <CoordinatorLayout style={styles.coodinatorlayout}>
           <MapView
             ref="map"
@@ -302,7 +320,7 @@ class personal extends Component {
               bottom: 250,
               left: 0
             }}>
-            {this.state.isMapReady ? (
+            {this.state.isMapReady && data === false ? (
               <Marker
                 moveOnMarkerPress={true}
                 style={{ height: 50, width: 50 }}
@@ -396,7 +414,11 @@ class personal extends Component {
                         onChangeText={text =>
                           this.setState({ inputLocation: text })
                         }
-                        value={this.state.inputLocation}
+                        value={
+                          this.state.isSearching
+                            ? 'Searching location...'
+                            : this.state.inputLocation
+                        }
                       />
                       <TouchableOpacity
                         onPress={this.withchangeLocation}
