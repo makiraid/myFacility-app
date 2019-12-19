@@ -95,17 +95,23 @@ class personal extends Component {
   }
 
   componentDidMount = async () => {
-    await Geolocation.getCurrentPosition(async info => {
-      await this.setState({
-        markerRegion: {
-          latitude: info.coords.latitude,
-          longitude: info.coords.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005
-        },
-        isMapReady: true
-      });
-    });
+    await Geolocation.getCurrentPosition(
+      async info => {
+        await this.setState({
+          markerRegion: {
+            latitude: info.coords.latitude,
+            longitude: info.coords.longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005
+          },
+          isMapReady: true
+        });
+      },
+      error => {
+        toast('Error while getting your location');
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+    );
     await this.onChangeLayout();
   };
 
