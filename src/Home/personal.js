@@ -239,10 +239,6 @@ class personal extends Component {
     });
   };
 
-  componentWillUnmount() {
-    clearInterval();
-  }
-
   handleLogout = () => {
     Alert.alert(
       'Log Out',
