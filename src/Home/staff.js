@@ -553,22 +553,18 @@ const mapStateToProps = state => ({
   order: state.order.data
 });
 
-const mapDispatchToProps = dispatch => (
-  {
-    setOrderData: payload =>
-      dispatch({
-        payload,
-        type: 'GET_ORDER_FULFILLED'
-      })
-  },
-  {
-    logout: payload =>
-      dispatch({
-        type: 'LOGOUT_FULFILLED',
-        payload
-      })
-  }
-);
+const mapDispatchToProps = dispatch => ({
+  setOrderData: payload =>
+    dispatch({
+      payload,
+      type: 'GET_ORDER_FULFILLED'
+    }),
+  logout: payload =>
+    dispatch({
+      type: 'LOGOUT_FULFILLED',
+      payload
+    })
+});
 
 // eslint-disable-next-line prettier/prettier
 export default connect(mapStateToProps, mapDispatchToProps)(personal);

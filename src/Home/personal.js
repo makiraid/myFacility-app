@@ -20,7 +20,7 @@ import {
   BottomSheetBehavior,
   FloatingActionButton
 } from 'react-native-bottom-sheet-behavior';
-// import SocketIOClient from 'socket.io-client';
+import SocketIOClient from 'socket.io-client';
 import Axios from 'axios';
 import ImagePicker from 'react-native-image-picker';
 
@@ -230,32 +230,16 @@ class personal extends Component {
   };
 
   setSocketOn = orderId => {
-    // const SOCKET_HOSTS = 'http://35.240.193.202:3001/';
-    // console.log(orderId);
-    // var socket = SocketIOClient(`${SOCKET_HOSTS}socket/v1/order-update`);
-    // socket.on(orderId, res => {
-    //   console.log(res);
-    // });
-
-    setInterval(async () => {
-      await Axios.post(`${HOST_NAME}api/v1/cek-status`, {
-        orderId
-      })
-        .then(res => {
-          this.setState({
-            idSocketStatus: res.data.orderStatus
-          });
-          toast('Sukses memperbarui status menjadi ' + res.data.orderStatus);
-        })
-        .catch(() => {
-          toast('Eror memperbarui status');
-        });
-    }, 36000);
+    const SOCKET_HOSTS = 'http://35.240.193.202:3001';
+    const socket = SocketIOClient(`${SOCKET_HOSTS}`);
+    socket.on(orderId, res => {
+      if (res.resultCode === 0) {
+        this.setState({ idSocketStatus: res.orderStatus });
+      } else {
+        toast(res.resultDesc);
+      }
+    });
   };
-
-  componentWillUnmount() {
-    clearInterval();
-  }
 
   handleLogout = () => {
     Alert.alert(
