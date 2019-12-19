@@ -13,7 +13,7 @@ class Home extends Component {
     return this.props.auth.role === 1 ? (
       <Personal navigation={this.props.navigation} />
     ) : this.props.auth.role === 2 ? (
-      <Staff />
+      <Staff navigation={this.props.navigation} />
     ) : (
       <Main navigation={this.props.navigation} />
     );
