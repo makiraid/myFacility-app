@@ -216,7 +216,7 @@ class personal extends Component {
         this.setState({
           status: 1
         });
-        toast('Sukses membuat pesanan' + res.data.orderId);
+        toast('Sukses membuat pesanan ' + res.data.orderId);
         this.setSocketOn(res.data.orderId);
       })
       .catch(() => {
@@ -243,7 +243,7 @@ class personal extends Component {
           this.setState({
             idSocketStatus: res.data.orderStatus
           });
-          toast('Sukses memperbarui status');
+          toast('Sukses memperbarui status menjadi ' + res.data.orderStatus);
         })
         .catch(() => {
           toast('Eror memperbarui status');
