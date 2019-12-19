@@ -1,5 +1,5 @@
 const initialState = {
-  data: ''
+  authToken: ''
 };
 
 const auth = (state = initialState, action) => {
