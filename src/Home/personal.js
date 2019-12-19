@@ -179,7 +179,7 @@ class personal extends Component {
     setTimeout(() => {
       this.setState({ isMapReady: true });
       this.animate();
-    }, 500);
+    }, 1500);
   };
 
   animate = () => {
@@ -295,7 +295,7 @@ class personal extends Component {
             onRegionChangeComplete={
               status === 0 && data === true ? this.handleChangeRegion : null
             }
-            region={region}
+            initialRegion={region}
             mapPadding={{
               top: 20,
               right: 0,

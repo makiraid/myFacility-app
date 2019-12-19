@@ -120,7 +120,7 @@ class personal extends Component {
   updateStatus = () => {
     const { userCode, token } = this.props.auth;
     const { orderId, statusType } = this.state;
-    const socket = io(`${SOCKET_HOST}socket/v1/order-update`);
+    const socket = io(`${SOCKET_HOST}`);
     socket.emit('update', {
       userCode: userCode,
       token: token,
@@ -228,6 +228,20 @@ class personal extends Component {
     this.openModal();
   };
 
+  setItem = item => {
+    this.setState({
+      markerActive: item,
+      isButton: true,
+      isCheckbox: false,
+      isLoading: false,
+      inputLocation: item.locationname,
+      inputDetailLocation: item.locationdetail,
+      inputProblem: item.problemdetail,
+      orderId: item.orderid,
+      image: item.problempic
+    });
+  };
+
   onChangeLayout = async (lang, long, langDelta, longDelta) => {
     await this.refs.map.animateToRegion(
       {
@@ -254,7 +268,7 @@ class personal extends Component {
           showsCompass
           provider={PROVIDER_GOOGLE} // remove if not using Google Maps
           style={styles.container}
-          region={{
+          initialRegion={{
             latitude: -6.175392,
             longitude: 106.827153,
             latitudeDelta: 0.0555,
@@ -263,7 +277,7 @@ class personal extends Component {
           mapPadding={{
             top: 20,
             right: 0,
-            bottom: 250,
+            bottom: 80,
             left: 0
           }}>
           {!this.state.isMapReady ? null : !this.props.order ? (
@@ -278,19 +292,9 @@ class personal extends Component {
                 <Marker
                   moveOnMarkerPress={true}
                   style={{ height: 50, width: 50 }}
-                  onPress={async () => {
-                    this.onChangeLayout(lat, long, 0.02, 0.02);
-                    this.setState({
-                      markerActive: item,
-                      isButton: true,
-                      isCheckbox: false,
-                      isLoading: false,
-                      inputLocation: item.locationname,
-                      inputDetailLocation: item.locationdetail,
-                      inputProblem: item.problemdetail,
-                      orderId: item.orderid,
-                      image: item.problempic
-                    });
+                  onPress={() => {
+                    this.setItem(item);
+                    this.onChangeLayout(lat, long, 0.01, 0.01);
                   }}
                   coordinate={{
                     latitude: lat,
