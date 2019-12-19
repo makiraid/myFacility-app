@@ -273,7 +273,7 @@ class personal extends Component {
               const split = item.locationcoor.split(',');
               const lat = Number(split[0]);
               const long = Number(split[1]);
-              const markerDisable = require('../Public/Assets/icon/marker-disable.jpg');
+              const markerDisable = require('../Public/Assets/icon/marker-disable.png');
               return (
                 <Marker
                   moveOnMarkerPress={true}

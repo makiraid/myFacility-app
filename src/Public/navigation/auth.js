@@ -15,6 +15,7 @@ export default createStackNavigator(
   },
   {
     headerMode: 'none',
+    initialRouteParams: 'Login',
     transitionConfig: () => ({
       transitionSpec: 3000,
       screenInterpolator:

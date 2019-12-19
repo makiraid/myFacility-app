@@ -21,9 +21,7 @@ const auth = (state = initialState, action) => {
 
     case 'LOGOUT_FULFILLED':
       return {
-        authToken: {
-          role: null
-        }
+        authToken: ''
       };
 
     default:
