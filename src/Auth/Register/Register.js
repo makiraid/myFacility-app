@@ -6,7 +6,8 @@ import {
   ImageBackground,
   TextInput,
   TouchableNativeFeedback,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { connect } from 'react-redux';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -93,12 +94,10 @@ class Register extends Component {
         source={require('../../Public/Assets/images/bg.png')}
         style={styles.container}>
         <View style={styles.wrapperHeader}>
-          <FontAwesome5
-            name="map-marker-alt"
-            color={Color.quarternary}
-            size={48}
+          <Image
+            style={styles.iconPng}
+            source={require('../../Public/Assets/icon/bg.png')}
           />
-          <Text style={styles.textTitle}>My Facility App</Text>
         </View>
 
         <View style={styles.containerInput}>
@@ -237,6 +236,13 @@ const styles = StyleSheet.create({
   wrapperIcon: {
     height: 24,
     width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 8
+  },
+  iconPng: {
+    height: 120,
+    width: 120,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 8
