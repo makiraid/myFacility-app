@@ -243,9 +243,10 @@ class personal extends Component {
           this.setState({
             idSocketStatus: res.data.orderStatus
           });
+          toast('Sukses memperbarui status');
         })
         .catch(() => {
-          toast('Error while getting status');
+          toast('Eror memperbarui status');
         });
     }, 36000);
   };
