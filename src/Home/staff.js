@@ -254,6 +254,28 @@ class personal extends Component {
     );
   };
 
+  handleLogout = () => {
+    Alert.alert(
+      'Log Out',
+      'Are u sure ?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => toast('Cancel log out'),
+          style: 'cancel'
+        },
+        {
+          text: 'OK',
+          onPress: async () => {
+            await this.props.logout();
+            await this.props.navigation.navigate('Auth');
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+  };
+
   render() {
     const { image } = this.state;
     return (
@@ -314,6 +336,35 @@ class personal extends Component {
             })
           )}
         </MapView>
+        <View
+          style={{
+            position: 'absolute',
+            marginTop: 20,
+            height: height / 4,
+            width: '185%',
+            borderRadius: 5,
+            backgroundColor: 'transparent',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+          <TouchableOpacity
+            onPress={() => this.handleLogout(this.props.navigation)}
+            style={{
+              height: 40,
+              width: 40,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'white',
+              borderRadius: 5,
+              elevation: 4
+            }}>
+            <FontAwesome5
+              name="sign-out-alt"
+              size={25}
+              color={Color.quarternary}
+            />
+          </TouchableOpacity>
+        </View>
         {this.state.isLoading ? (
           <View style={styles.overlayLoading}>
             <BottomSheetBehavior
@@ -502,18 +553,25 @@ const mapStateToProps = state => ({
   order: state.order.data
 });
 
-const mapDispatchToProps = dispatch => ({
-  setOrderData: payload =>
-    dispatch({
-      payload,
-      type: 'GET_ORDER_FULFILLED'
-    })
-});
+const mapDispatchToProps = dispatch => (
+  {
+    setOrderData: payload =>
+      dispatch({
+        payload,
+        type: 'GET_ORDER_FULFILLED'
+      })
+  },
+  {
+    logout: payload =>
+      dispatch({
+        type: 'LOGOUT_FULFILLED',
+        payload
+      })
+  }
+);
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(personal);
+// eslint-disable-next-line prettier/prettier
+export default connect(mapStateToProps, mapDispatchToProps)(personal);
 
 const styles = StyleSheet.create({
   coodinatorlayout: {
