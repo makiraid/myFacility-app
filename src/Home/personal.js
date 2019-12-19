@@ -9,7 +9,6 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  PermissionsAndroid,
   CheckBox,
   Alert
 } from 'react-native';
@@ -159,21 +158,6 @@ class personal extends Component {
       });
   };
 
-  requestPermissionLocation = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('Location permisson granted');
-      } else {
-        console.log('Location permission denied');
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  };
-
   onImageClick = async () => {
     ImagePicker.showImagePicker(options, response => {
       if (response.didCancel) {
@@ -192,6 +176,13 @@ class personal extends Component {
   };
 
   onChangeLayout = () => {
+    setTimeout(() => {
+      this.setState({ isMapReady: true });
+      this.animate();
+    }, 500);
+  };
+
+  animate = () => {
     let { markerRegion, isMapReady } = this.state;
     if (isMapReady === true) {
       setTimeout(() => {
@@ -225,7 +216,6 @@ class personal extends Component {
         this.setState({
           status: 1
         });
-        console.log(res.data);
         toast('Sukses membuat pesanan' + res.data.orderId);
         this.setSocketOn(res.data.orderId);
       })
@@ -297,7 +287,6 @@ class personal extends Component {
             moveOnMarkerPress
             showsMyLocationButton
             onMapReady={this.onChangeLayout}
-            onLayout={() => this.setState({ isMapReady: true })}
             showsScale={false}
             showsBuildings
             provider={PROVIDER_GOOGLE} // remove if not using Google Maps

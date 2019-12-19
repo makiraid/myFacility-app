@@ -6,7 +6,8 @@ import {
   ImageBackground,
   TextInput,
   TouchableNativeFeedback,
-  ActivityIndicator
+  ActivityIndicator,
+  PermissionsAndroid
 } from 'react-native';
 import { connect } from 'react-redux';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -22,6 +23,25 @@ class Login extends Component {
     email: '',
     password: '',
     isLoading: false
+  };
+
+  componentDidMount() {
+    this.requestPermissionLocation();
+  }
+
+  requestPermissionLocation = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        toast('Akses gps telah diberikan');
+      } else {
+        toast('Akses gps tidak diberikan');
+      }
+    } catch {
+      toast('Gagal melakukan permintaan izin lokasi');
+    }
   };
 
   handleLogin = () => {
