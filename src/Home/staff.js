@@ -53,6 +53,7 @@ class personal extends Component {
   }
 
   state = {
+    isShow: true,
     isMapReady: true,
     image: '',
     inputLocation: '',
@@ -279,271 +280,290 @@ class personal extends Component {
   render() {
     const { image } = this.state;
     return (
-      <CoordinatorLayout style={styles.coodinatorlayout}>
-        <MapView
-          ref="map"
-          showsUserLocation
-          moveOnMarkerPress
-          showsMyLocationButton
-          showsScale={false}
-          showsBuildings
-          showsCompass
-          provider={PROVIDER_GOOGLE} // remove if not using Google Maps
-          style={styles.container}
-          initialRegion={{
-            latitude: -6.175392,
-            longitude: 106.827153,
-            latitudeDelta: 0.0555,
-            longitudeDelta: 0.0521
-          }}
-          mapPadding={{
-            top: 20,
-            right: 0,
-            bottom: 80,
-            left: 0
-          }}>
-          {!this.state.isMapReady ? null : !this.props.order ? (
-            <Text>{this.props.auth.name}</Text>
-          ) : (
-            this.props.order.map(item => {
-              const split = item.locationcoor.split(',');
-              const lat = Number(split[0]);
-              const long = Number(split[1]);
-              const markerDisable = require('../Public/Assets/icon/marker-disable.png');
-              return (
-                <Marker
-                  moveOnMarkerPress={true}
-                  style={{ height: 50, width: 50 }}
-                  onPress={() => {
-                    this.setItem(item);
-                    this.onChangeLayout(lat, long, 0.01, 0.01);
-                  }}
-                  coordinate={{
-                    latitude: lat,
-                    longitude: long
-                  }}>
-                  <Image
-                    source={
-                      this.state.markerActive &&
-                      this.state.markerActive.orderid === item.orderid
-                        ? marker
-                        : markerDisable
-                    }
-                    style={{ height: 50, width: 45 }}
-                  />
-                </Marker>
-              );
-            })
-          )}
-        </MapView>
-        <View
-          style={{
-            position: 'absolute',
-            marginTop: 20,
-            height: height / 4,
-            width: '185%',
-            borderRadius: 5,
-            backgroundColor: 'transparent',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-          <TouchableOpacity
-            onPress={() => this.handleLogout(this.props.navigation)}
+      <React.Fragment>
+        {this.state.isShow ? (
+          <View
             style={{
-              height: 40,
-              width: 40,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'white',
-              borderRadius: 5,
-              elevation: 4
+              position: 'absolute',
+              zIndex: 2,
+              top: 80,
+              right: 13,
+              alignItems: 'center'
             }}>
-            <FontAwesome5
-              name="sign-out-alt"
-              size={25}
-              color={Color.quarternary}
-            />
-          </TouchableOpacity>
-        </View>
-        {this.state.isLoading ? (
-          <View style={styles.overlayLoading}>
+            <TouchableOpacity
+              onPress={() => this.handleLogout(this.props.navigation)}
+              style={{
+                zIndex: 0,
+                height: 37.5,
+                width: 37.5,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'white',
+                borderRadius: 5,
+                elevation: 5
+              }}>
+              <FontAwesome5
+                name="sign-out-alt"
+                size={20}
+                color={Color.quarternary}
+              />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        <CoordinatorLayout style={styles.coodinatorlayout}>
+          <MapView
+            ref="map"
+            showsUserLocation
+            moveOnMarkerPress
+            showsMyLocationButton
+            showsScale={false}
+            showsBuildings
+            showsCompass
+            provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+            style={styles.container}
+            initialRegion={{
+              latitude: -6.175392,
+              longitude: 106.827153,
+              latitudeDelta: 0.0555,
+              longitudeDelta: 0.0521
+            }}
+            mapPadding={{
+              top: 20,
+              right: 0,
+              bottom: 80,
+              left: 0
+            }}>
+            {!this.state.isMapReady ? null : !this.props.order ? (
+              <Text>{this.props.auth.name}</Text>
+            ) : (
+              this.props.order.map(item => {
+                const split = item.locationcoor.split(',');
+                const lat = Number(split[0]);
+                const long = Number(split[1]);
+                const markerDisable = require('../Public/Assets/icon/marker-disable.png');
+                return (
+                  <Marker
+                    moveOnMarkerPress={true}
+                    style={{ height: 50, width: 50 }}
+                    onPress={() => {
+                      this.setItem(item);
+                      this.onChangeLayout(lat, long, 0.01, 0.01);
+                    }}
+                    coordinate={{
+                      latitude: lat,
+                      longitude: long
+                    }}>
+                    <Image
+                      source={
+                        this.state.markerActive &&
+                        this.state.markerActive.orderid === item.orderid
+                          ? marker
+                          : markerDisable
+                      }
+                      style={{ height: 50, width: 45 }}
+                    />
+                  </Marker>
+                );
+              })
+            )}
+          </MapView>
+          {this.state.isLoading ? (
+            <View style={styles.overlayLoading}>
+              <BottomSheetBehavior
+                ref="bottomSheet"
+                peekHeight={100}
+                hideable={false}
+                state={BottomSheetBehavior.STATE_HIDDEN}>
+                <View style={styles.parent}>
+                  <ActivityIndicator size="large" color={Color.primary} />
+                </View>
+              </BottomSheetBehavior>
+            </View>
+          ) : (
             <BottomSheetBehavior
               ref="bottomSheet"
-              peekHeight={100}
+              peekHeight={250}
               hideable={false}
-              state={BottomSheetBehavior.STATE_HIDDEN}>
-              <View style={styles.parent}>
-                <ActivityIndicator size="large" color={Color.primary} />
-              </View>
-            </BottomSheetBehavior>
-          </View>
-        ) : (
-          <BottomSheetBehavior
-            ref="bottomSheet"
-            peekHeight={250}
-            hideable={false}
-            state={BottomSheetBehavior.STATE_COLLAPSED}>
-            {this.state.isButton ? (
-              <View style={{ height: 66, backgroundColor: 'rgba(0,0,0,0.0)' }}>
-                <View style={styles.miniContainer}>
-                  <TouchableNativeFeedback
-                    onPress={() => {
-                      this.setState({
-                        isButton: false,
-                        isCheckbox: false,
-                        isLoading: false
-                      });
-                    }}
-                    disabled={this.state.markerActive.orderid ? false : true}>
-                    <View
-                      style={[
-                        styles.buttonBottom,
-                        this.state.markerActive.orderid
-                          ? styles.activeButton
-                          : null
-                      ]}>
-                      <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
+              onStateChange={e => {
+                if (e.nativeEvent.state == 4) {
+                  this.setState({ isShow: true });
+                } else {
+                  this.setState({ isShow: false });
+                }
+              }}
+              state={BottomSheetBehavior.STATE_COLLAPSED}>
+              {this.state.isButton ? (
+                <View
+                  style={{ height: 66, backgroundColor: 'rgba(0,0,0,0.0)' }}>
+                  <View style={styles.miniContainer}>
+                    <TouchableNativeFeedback
+                      onPress={() => {
+                        this.setState({
+                          isButton: false,
+                          isCheckbox: false,
+                          isLoading: false
+                        });
+                      }}
+                      disabled={this.state.markerActive.orderid ? false : true}>
+                      <View
+                        style={[
+                          styles.buttonBottom,
+                          this.state.markerActive.orderid
+                            ? styles.activeButton
+                            : null
+                        ]}>
+                        <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
+                      </View>
+                    </TouchableNativeFeedback>
+                  </View>
+                </View>
+              ) : this.state.isCheckbox ? (
+                <View style={styles.parentCheckbox}>
+                  <Text style={styles.textTitle}>Let's Check Your</Text>
+                  <TouchableOpacity style={styles.checkboxWrapper}>
+                    <CheckBox value={true} />
+                    <Text>I'm OTW</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.checkboxWrapper}>
+                    <CheckBox
+                      onValueChange={async () => {
+                        await this.setState({
+                          statusType: 2
+                        });
+                        this.updateStatus();
+                      }}
+                    />
+                    <Text>Observasi</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.checkboxWrapper}>
+                    <CheckBox
+                      onValueChange={async () => {
+                        await this.setState({
+                          statusType: 3
+                        });
+                        this.updateStatus();
+                      }}
+                    />
+                    <Text>Proses Perbaikan</Text>
+                  </TouchableOpacity>
+                  <TouchableNativeFeedback onPress={() => this.returnModal()}>
+                    <View style={styles.button}>
+                      <Text style={styles.textButton}>Done</Text>
                     </View>
                   </TouchableNativeFeedback>
                 </View>
-              </View>
-            ) : this.state.isCheckbox ? (
-              <View style={styles.parentCheckbox}>
-                <Text style={styles.textTitle}>Let's Check Your</Text>
-                <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox value={true} />
-                  <Text>I'm OTW</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox
-                    onValueChange={async () => {
-                      await this.setState({
-                        statusType: 2
-                      });
-                      this.updateStatus();
-                    }}
+              ) : (
+                <View style={{ height: height, backgroundColor: '#fff' }}>
+                  <FontAwesome5
+                    style={styles.icon}
+                    name="grip-lines"
+                    size={18}
+                    color="#c9c9c9"
                   />
-                  <Text>Observasi</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.checkboxWrapper}>
-                  <CheckBox
-                    onValueChange={async () => {
-                      await this.setState({
-                        statusType: 3
-                      });
-                      this.updateStatus();
-                    }}
-                  />
-                  <Text>Proses Perbaikan</Text>
-                </TouchableOpacity>
-                <TouchableNativeFeedback onPress={() => this.returnModal()}>
-                  <View style={styles.button}>
-                    <Text style={styles.textButton}>Done</Text>
+                  <View style={styles.miniContainer}>
+                    <Text style={styles.textTitle}>Where are you ?</Text>
+                    <View
+                      style={[
+                        styles.wrapperForm,
+                        styles.wrapperDetailLocation
+                      ]}>
+                      <TextInput
+                        style={styles.input}
+                        editable={false}
+                        placeholder="Input your location"
+                        onFocus={() =>
+                          this.refs.bottomSheet.setBottomSheetState(
+                            BottomSheetBehavior.STATE_EXPANDED
+                          )
+                        }
+                        onChangeText={text =>
+                          this.setState({ inputLocation: text })
+                        }
+                        value={this.state.inputLocation}
+                      />
+                    </View>
+                    <View
+                      style={[
+                        styles.wrapperForm,
+                        styles.wrapperDetailLocation
+                      ]}>
+                      <FontAwesome5
+                        style={styles.iconInput}
+                        name="edit"
+                        color="grey"
+                        size={16}
+                      />
+                      <TextInput
+                        style={styles.miniInput}
+                        editable={false}
+                        placeholder="Input detail location"
+                        onFocus={() =>
+                          this.refs.bottomSheet.setBottomSheetState(
+                            BottomSheetBehavior.STATE_EXPANDED
+                          )
+                        }
+                        onChangeText={text =>
+                          this.setState({ inputDetailLocation: text })
+                        }
+                        value={this.state.inputDetailLocation}
+                      />
+                    </View>
                   </View>
-                </TouchableNativeFeedback>
-              </View>
-            ) : (
-              <View style={{ height: height, backgroundColor: '#fff' }}>
-                <FontAwesome5
-                  style={styles.icon}
-                  name="grip-lines"
-                  size={18}
-                  color="#c9c9c9"
-                />
-                <View style={styles.miniContainer}>
-                  <Text style={styles.textTitle}>Where are you ?</Text>
-                  <View
-                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                    <TextInput
-                      style={styles.input}
-                      editable={false}
-                      placeholder="Input your location"
-                      onFocus={() =>
-                        this.refs.bottomSheet.setBottomSheetState(
-                          BottomSheetBehavior.STATE_EXPANDED
-                        )
-                      }
-                      onChangeText={text =>
-                        this.setState({ inputLocation: text })
-                      }
-                      value={this.state.inputLocation}
-                    />
+                  <View style={styles.miniContainer}>
+                    <Text style={styles.textTitle}>Whats your problem ?</Text>
+                    <View
+                      style={[
+                        styles.wrapperForm,
+                        styles.wrapperDetailLocation
+                      ]}>
+                      <TextInput
+                        style={styles.input}
+                        editable={false}
+                        placeholder="Input your problem"
+                        onFocus={() =>
+                          this.refs.bottomSheet.setBottomSheetState(
+                            BottomSheetBehavior.STATE_EXPANDED
+                          )
+                        }
+                        onChangeText={text =>
+                          this.setState({ inputProblem: text })
+                        }
+                        value={this.state.inputProblem}
+                      />
+                    </View>
                   </View>
-                  <View
-                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                    <FontAwesome5
-                      style={styles.iconInput}
-                      name="edit"
-                      color="grey"
-                      size={16}
-                    />
-                    <TextInput
-                      style={styles.miniInput}
-                      editable={false}
-                      placeholder="Input detail location"
-                      onFocus={() =>
-                        this.refs.bottomSheet.setBottomSheetState(
-                          BottomSheetBehavior.STATE_EXPANDED
-                        )
-                      }
-                      onChangeText={text =>
-                        this.setState({ inputDetailLocation: text })
-                      }
-                      value={this.state.inputDetailLocation}
-                    />
+                  <View style={styles.miniContainer}>
+                    <Text style={styles.textTitle}>Post a Picture!</Text>
+                    <TouchableOpacity style={styles.image}>
+                      {image ? (
+                        <Image source={{ uri: image }} style={styles.image} />
+                      ) : (
+                        <View style={styles.image}>
+                          <FontAwesome5 name="camera" color="grey" size={24} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.miniContainer}>
+                    <TouchableOpacity
+                      onPress={async () => {
+                        await this.takeOrder();
+                        await this.setState({
+                          isCheckbox: true,
+                          isLoading: false,
+                          isButton: false
+                        });
+                      }}
+                      style={styles.button}>
+                      <Text style={styles.textButton}>Confirm</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-                <View style={styles.miniContainer}>
-                  <Text style={styles.textTitle}>Whats your problem ?</Text>
-                  <View
-                    style={[styles.wrapperForm, styles.wrapperDetailLocation]}>
-                    <TextInput
-                      style={styles.input}
-                      editable={false}
-                      placeholder="Input your problem"
-                      onFocus={() =>
-                        this.refs.bottomSheet.setBottomSheetState(
-                          BottomSheetBehavior.STATE_EXPANDED
-                        )
-                      }
-                      onChangeText={text =>
-                        this.setState({ inputProblem: text })
-                      }
-                      value={this.state.inputProblem}
-                    />
-                  </View>
-                </View>
-                <View style={styles.miniContainer}>
-                  <Text style={styles.textTitle}>Post a Picture!</Text>
-                  <TouchableOpacity style={styles.image}>
-                    {image ? (
-                      <Image source={{ uri: image }} style={styles.image} />
-                    ) : (
-                      <View style={styles.image}>
-                        <FontAwesome5 name="camera" color="grey" size={24} />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.miniContainer}>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      await this.takeOrder();
-                      await this.setState({
-                        isCheckbox: true,
-                        isLoading: false,
-                        isButton: false
-                      });
-                    }}
-                    style={styles.button}>
-                    <Text style={styles.textButton}>Confirm</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </BottomSheetBehavior>
-        )}
-      </CoordinatorLayout>
+              )}
+            </BottomSheetBehavior>
+          )}
+        </CoordinatorLayout>
+      </React.Fragment>
     );
   }
 }
@@ -653,7 +673,7 @@ const styles = StyleSheet.create({
     zIndex: 1
   },
   overlayLoading: {
-    zIndex: 0,
+    zIndex: 10,
     backgroundColor: 'rgba(0,0,0,0.3)',
     height: '100%',
     width: '100%',
