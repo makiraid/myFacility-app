@@ -40,7 +40,7 @@ const options = {
     path: 'myfacilityapp'
   }
 };
-let data = false;
+let data = true;
 const marker = require('../Public/Assets/icon/marker.png');
 const listMaintenance = [
   {
@@ -123,8 +123,8 @@ class personal extends Component {
           {
             latitude: info.coords.latitude,
             longitude: info.coords.longitude,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02
+            latitudeDelta: 0.002,
+            longitudeDelta: 0.002
           },
           1000
         );
@@ -135,19 +135,6 @@ class personal extends Component {
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
     this.setState({ isLoading: false });
-  };
-
-  withchangeLocation = () => {
-    this.setState({
-      region: {
-        latitude: this.state.markerRegion.latitude,
-        longitude: this.state.markerRegion.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-        changeLocation: !this.state.changeLocation
-      }
-    });
-    data = !data;
   };
 
   handleChangeRegion = info => {
@@ -172,7 +159,7 @@ class personal extends Component {
         });
       })
       .catch(() => {
-        // console.log(err);
+        toast('Getting location name failed');
       })
       .finally(() => {
         this.setState({ isSearching: false });
@@ -199,7 +186,7 @@ class personal extends Component {
   onChangeLayout = () => {
     setTimeout(() => {
       this.setState({ isMapReady: true });
-      this.animate();
+      // this.animate();
     }, 1500);
   };
 
@@ -314,12 +301,12 @@ class personal extends Component {
             </TouchableOpacity>
           </View>
         ) : null}
-        {data === true ? (
+        {this.state.isShow ? (
           <FloatingActionButton
             autoAnchor
             icon={'map-marker-alt'}
             iconProvider={FontAwesome5}
-            backgroundColor={Color.tertiary}
+            backgroundColor={Color.quarternary}
             iconColor={'white'}
             style={{
               position: 'absolute',
@@ -427,14 +414,6 @@ class personal extends Component {
                             : this.state.inputLocation
                         }
                       />
-                      <TouchableOpacity
-                        onPress={this.withchangeLocation}
-                        style={styles.changeLocation}>
-                        <FontAwesome5
-                          name={data === true ? 'check' : 'map'}
-                          color="white"
-                        />
-                      </TouchableOpacity>
                     </View>
                     <View
                       style={[
