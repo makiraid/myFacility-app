@@ -7,14 +7,13 @@ import {
   Dimensions,
   TextInput,
   Image,
-  TouchableOpacity,
   ActivityIndicator,
   CheckBox,
   Alert
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import {
   CoordinatorLayout,
   BottomSheetBehavior
@@ -28,6 +27,7 @@ import Color from '../Public/Color';
 // import { HOST_NAME } from 'react-native-dotenv';
 const HOST_NAME = 'https://apidev-complainer.archv.id/';
 import { connect } from 'react-redux';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
@@ -67,6 +67,7 @@ class personal extends Component {
   constructor() {
     super();
     this.state = {
+      isShow: true,
       isMapReady: false,
       image: '',
       imagedata: {
@@ -96,10 +97,19 @@ class personal extends Component {
     };
   }
 
-  componentDidMount = async () => {
+  componentDidMount() {
+    try {
+      this.getLocation();
+    } catch {
+      toast('Error did get location');
+    }
+  }
+
+  getLocation = () => {
+    this.setState({ isLoading: true });
     Geolocation.getCurrentPosition(
       async info => {
-        await this.setState({
+        this.setState({
           markerRegion: {
             latitude: info.coords.latitude,
             longitude: info.coords.longitude,
@@ -107,13 +117,22 @@ class personal extends Component {
             longitudeDelta: 0.005
           }
         });
-        await this.onChangeLayout();
+        this.refs.map.animateToRegion(
+          {
+            latitude: info.coords.latitude,
+            longitude: info.coords.longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02
+          },
+          1000
+        );
       },
       error => {
-        toast('Error while getting your location');
+        toast(JSON.stringify(error));
       },
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
+    this.setState({ isLoading: false });
   };
 
   withchangeLocation = () => {
@@ -246,7 +265,6 @@ class personal extends Component {
       [
         {
           text: 'Cancel',
-          onPress: () => toast('Cancel log out'),
           style: 'cancel'
         },
         {
@@ -265,6 +283,35 @@ class personal extends Component {
     const { image, region, status, markerRegion } = this.state;
     return (
       <React.Fragment>
+        {this.state.isShow ? (
+          <View
+            style={{
+              position: 'absolute',
+              zIndex: 2,
+              top: 80,
+              right: 13,
+              alignItems: 'center'
+            }}>
+            <TouchableOpacity
+              onPress={() => this.handleLogout(this.props.navigation)}
+              style={{
+                zIndex: 0,
+                height: 37.5,
+                width: 37.5,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'white',
+                borderRadius: 5,
+                elevation: 5
+              }}>
+              <FontAwesome5
+                name="sign-out-alt"
+                size={20}
+                color={Color.quarternary}
+              />
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <CoordinatorLayout style={styles.coodinatorlayout}>
           <MapView
             ref="map"
@@ -298,37 +345,6 @@ class personal extends Component {
               </Marker>
             ) : null}
           </MapView>
-          {data === true ? null : (
-            <View
-              style={{
-                position: 'absolute',
-                marginTop: 20,
-                height: height / 4,
-                width: '185%',
-                borderRadius: 5,
-                backgroundColor: 'transparent',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-              <TouchableOpacity
-                onPress={() => this.handleLogout(this.props.navigation)}
-                style={{
-                  height: 40,
-                  width: 40,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'white',
-                  borderRadius: 5,
-                  elevation: 4
-                }}>
-                <FontAwesome5
-                  name="sign-out-alt"
-                  size={25}
-                  color={Color.quarternary}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
           {this.state.isLoading ? (
             <View style={styles.overlayLoading}>
               <BottomSheetBehavior
@@ -346,6 +362,13 @@ class personal extends Component {
               ref="bottomSheet"
               peekHeight={250}
               hideable={false}
+              onStateChange={e => {
+                if (e.nativeEvent.state == 4) {
+                  this.setState({ isShow: true });
+                } else {
+                  this.setState({ isShow: false });
+                }
+              }}
               state={BottomSheetBehavior.STATE_COLLAPSED}>
               {this.state.status === 0 ? (
                 <View
@@ -595,7 +618,8 @@ const styles = StyleSheet.create({
   },
   container: {
     height,
-    width: '100%'
+    width: '100%',
+    zIndex: 0
   },
   headerBS: {
     height: 20,
