@@ -22,10 +22,9 @@ import ImagePicker from 'react-native-image-picker';
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
 import Axios from 'axios';
-import io from 'socket.io-client';
+import SocketIOClient from 'socket.io-client';
 // import { HOST_NAME } from 'react-native-dotenv';
 const HOST_NAME = 'https://apidev-complainer.archv.id/';
-const SOCKET_HOST = 'http://35.240.193.202:3001/';
 import { connect } from 'react-redux';
 
 const height = Dimensions.get('window').height;
@@ -38,18 +37,27 @@ const options = {
   }
 };
 const marker = require('../Public/Assets/icon/marker.png');
+const listMaintenance = [
+  {
+    id: 1,
+    title: 'Im On the way'
+  },
+  {
+    id: 2,
+    title: 'Observasi'
+  },
+  {
+    id: 3,
+    title: 'Proses Perbaikan'
+  }
+];
 class personal extends Component {
   static navigationOptions = {
     header: null
   };
 
-  constructor() {
-    super();
-    this.getOrder = this.getOrder.bind(this);
-  }
-
   componentDidMount() {
-    this.getOrder();
+    this.pointer();
   }
 
   state = {
@@ -60,15 +68,59 @@ class personal extends Component {
     inputDetailLocation: '',
     inputProblem: '',
     orderId: '',
-    status: 0,
     isLoading: false,
     isButton: true,
     isCheckbox: false,
     markerActive: {},
     dataActive: null,
     statusType: 1,
-    isAnimate: false
-    // statusOrder: 1
+    singleMarker: ''
+  };
+
+  pointer = () => {
+    if (!this.props.pickedOrder.data) {
+      this.getOrder();
+    } else {
+      this.setOldOrder();
+    }
+  };
+
+  setOldOrder = () => {
+    const { userCode, token } = this.props.auth;
+    const { orderId } = this.props.pickedOrder.data;
+    this.setState({
+      isLoading: true
+    });
+    const body = {
+      userCode,
+      token,
+      orderId
+    };
+    Axios.post(`${HOST_NAME}api/v1/order-detail`, body)
+      .then(res => {
+        const { locationcoor, orderstatus } = res.data.orderDetail[0];
+        const latlong = locationcoor.split(',');
+        let lat = Number(latlong[0]);
+        let long = Number(latlong[1]);
+        const singleMarker = {
+          lat,
+          long
+        };
+        this.setState({
+          isCheckbox: true,
+          isButton: false,
+          statusType: orderstatus,
+          singleMarker,
+          orderId
+        });
+        this.onChangeLayout(lat, long, 0.002, 0.002);
+      })
+      .catch(err => {
+        toast('Error get order detail' + JSON.stringify(err.message));
+      })
+      .finally(() => {
+        this.setState({ isLoading: false });
+      });
   };
 
   getOrder = () => {
@@ -82,12 +134,12 @@ class personal extends Component {
       token: token
     };
     Axios.post(`${HOST_NAME}api/v1/order-list`, body)
-      .then(async res => {
-        await this.props.setOrderData(res.data.orders);
-        await this.animate(res.data.orders);
+      .then(res => {
+        this.props.setOrderData(res.data.orders);
+        this.animate(res.data.orders);
       })
-      .catch(() => {
-        // console.log(err);
+      .catch(err => {
+        toast('Error get order' + JSON.stringify(err.message));
       })
       .finally(() => {
         this.setState({ isLoading: false });
@@ -107,55 +159,66 @@ class personal extends Component {
     };
     Axios.post(`${HOST_NAME}api/v1/order-take`, body)
       .then(async res => {
-        // await this.props.setOrderData(res.data.orders);
+        if (res.data.resultCode === 0) {
+          this.setState({
+            isCheckbox: true,
+            isButton: false
+          });
+          toast('Sukses mengambil order');
+          const bodyPickedOrder = {
+            orderId: orderId
+          };
+          this.props.setPickedOrder(bodyPickedOrder);
+        } else {
+          toast(res.data.resultDesc);
+        }
+        // await this.props.pickedOrder(res.data.orders);
         // this.animate(res.data.orders);
       })
       .catch(() => {
-        // console.log(err);
+        toast('Error take order');
       })
       .finally(() => {
         this.setState({ isLoading: false });
       });
   };
 
-  updateStatus = () => {
+  updateStatus = async statusType => {
     const { userCode, token } = this.props.auth;
-    const { orderId, statusType } = this.state;
-    const socket = io(`${SOCKET_HOST}`);
+    const { orderId } = this.state;
+    const SOCKET_HOSTS = 'http://35.240.193.202:3001';
+    const socket = SocketIOClient(SOCKET_HOSTS);
     socket.emit('update', {
       userCode: userCode,
       token: token,
-      orderId,
+      orderId: orderId,
       orderStatus: statusType
     });
   };
 
-  resetData = async () => {
-    await this.setState({
-      statusType: 4
-    });
-    await this.updateStatus();
-    await this.setState({
-      markerActive: {},
+  resetData = () => {
+    this.updateStatus(4);
+    this.setState({
+      orderId: '',
       isButton: true,
       isCheckbox: false,
-      isLoading: false,
-      statusOrder: 1
+      isLoading: false
     });
-    await this.getOrder();
+    this.getOrder();
+    this.props.setClearPickedOrder();
   };
 
   returnModal = () => {
     Alert.alert(
       '',
-      'Apakah anda yakin untuk menyelesaikan orderan?',
+      'Apakah anda yakin untuk menyelesaikan pesanan?',
       [
         {
-          text: 'Cancel',
+          text: 'Batal',
           style: 'cancel'
         },
         {
-          text: 'OK',
+          text: 'YA',
           onPress: () => this.resetData()
         }
       ],
@@ -231,7 +294,6 @@ class personal extends Component {
 
   setItem = item => {
     this.setState({
-      markerActive: item,
       isButton: true,
       isCheckbox: false,
       isLoading: false,
@@ -347,7 +409,7 @@ class personal extends Component {
                     style={{ height: 50, width: 50 }}
                     onPress={() => {
                       this.setItem(item);
-                      this.onChangeLayout(lat, long, 0.01, 0.01);
+                      this.onChangeLayout(lat, long, 0.002, 0.001);
                     }}
                     coordinate={{
                       latitude: lat,
@@ -355,8 +417,7 @@ class personal extends Component {
                     }}>
                     <Image
                       source={
-                        this.state.markerActive &&
-                        this.state.markerActive.orderid === item.orderid
+                        this.state.orderId === item.orderid
                           ? marker
                           : markerDisable
                       }
@@ -366,6 +427,17 @@ class personal extends Component {
                 );
               })
             )}
+            {this.state.singleMarker ? (
+              <Marker
+                moveOnMarkerPress={true}
+                style={{ height: 50, width: 50 }}
+                coordinate={{
+                  latitude: this.state.singleMarker.lat,
+                  longitude: this.state.singleMarker.long
+                }}>
+                <Image source={marker} style={{ height: 50, width: 45 }} />
+              </Marker>
+            ) : null}
           </MapView>
           {this.state.isLoading ? (
             <View style={styles.overlayLoading}>
@@ -404,15 +476,15 @@ class personal extends Component {
                           isLoading: false
                         });
                       }}
-                      disabled={this.state.markerActive.orderid ? false : true}>
+                      disabled={!this.state.orderId}>
                       <View
                         style={[
                           styles.buttonBottom,
-                          this.state.markerActive.orderid
-                            ? styles.activeButton
-                            : null
+                          this.state.orderId ? styles.activeButton : null
                         ]}>
-                        <Text style={styles.textButtonBottom}>TAKE ORDER</Text>
+                        <Text style={styles.textButtonBottom}>
+                          LIHAT DETAIL
+                        </Text>
                       </View>
                     </TouchableNativeFeedback>
                   </View>
@@ -420,35 +492,28 @@ class personal extends Component {
               ) : this.state.isCheckbox ? (
                 <View style={styles.parentCheckbox}>
                   <Text style={styles.textTitle}>Let's Check Your</Text>
-                  <TouchableOpacity style={styles.checkboxWrapper}>
-                    <CheckBox value={true} />
-                    <Text>I'm OTW</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.checkboxWrapper}>
-                    <CheckBox
-                      onValueChange={async () => {
-                        await this.setState({
-                          statusType: 2
-                        });
-                        this.updateStatus();
-                      }}
-                    />
-                    <Text>Observasi</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.checkboxWrapper}>
-                    <CheckBox
-                      onValueChange={async () => {
-                        await this.setState({
-                          statusType: 3
-                        });
-                        this.updateStatus();
-                      }}
-                    />
-                    <Text>Proses Perbaikan</Text>
-                  </TouchableOpacity>
+                  {listMaintenance.map((item, index) => {
+                    let isActive = false;
+                    if (index + 1 <= this.state.statusType) {
+                      isActive = true;
+                    }
+                    return (
+                      <View key={index} style={styles.checkboxWrapper}>
+                        <CheckBox
+                          onValueChange={() => {
+                            this.setState({ statusType: index + 1 });
+                            this.updateStatus(index + 1);
+                          }}
+                          disabled={isActive}
+                          value={isActive}
+                        />
+                        <Text>{item.title}</Text>
+                      </View>
+                    );
+                  })}
                   <TouchableNativeFeedback onPress={() => this.returnModal()}>
                     <View style={styles.button}>
-                      <Text style={styles.textButton}>Done</Text>
+                      <Text style={styles.textButton}>SELESAIKAN PESANAN</Text>
                     </View>
                   </TouchableNativeFeedback>
                 </View>
@@ -546,16 +611,9 @@ class personal extends Component {
                   </View>
                   <View style={styles.miniContainer}>
                     <TouchableOpacity
-                      onPress={async () => {
-                        await this.takeOrder();
-                        await this.setState({
-                          isCheckbox: true,
-                          isLoading: false,
-                          isButton: false
-                        });
-                      }}
+                      onPress={this.takeOrder}
                       style={styles.button}>
-                      <Text style={styles.textButton}>Confirm</Text>
+                      <Text style={styles.textButton}>AMBIL PESANAN</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -570,7 +628,8 @@ class personal extends Component {
 
 const mapStateToProps = state => ({
   auth: state.auth.authToken,
-  order: state.order.data
+  order: state.order.data,
+  pickedOrder: state.pickedOrder
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -582,6 +641,16 @@ const mapDispatchToProps = dispatch => ({
   logout: payload =>
     dispatch({
       type: 'LOGOUT_FULFILLED',
+      payload
+    }),
+  setPickedOrder: payload =>
+    dispatch({
+      type: 'PICKED_ORDER_FULFILLED',
+      payload
+    }),
+  setClearPickedOrder: payload =>
+    dispatch({
+      type: 'PICKED_ORDER_FULFILLED',
       payload
     })
 });

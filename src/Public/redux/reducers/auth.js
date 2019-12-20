@@ -7,14 +7,12 @@ const auth = (state = initialState, action) => {
     case 'POST_REGISTER_FULFILLED':
       return {
         ...state,
-        isLoading: true,
         message: 'success'
       };
 
     case 'POST_LOGIN_FULFILLED':
       return {
         ...state,
-        isLoading: true,
         authToken: action.payload.data.user,
         message: 'success'
       };

@@ -36,7 +36,7 @@ class Login extends Component {
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        toast('Akses gps telah diberikan');
+        // toast('Akses gps telah diberikan');
       } else {
         toast('Akses gps tidak diberikan');
       }

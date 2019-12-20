@@ -9,7 +9,7 @@ import reducer from './middlewares';
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth']
+  whitelist: ['auth', 'pickedOrder']
 };
 const persistedReducer = persistReducer(persistConfig, reducer);
 
