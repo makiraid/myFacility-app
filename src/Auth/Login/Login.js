@@ -55,7 +55,7 @@ class Login extends Component {
   };
 
   onRequestLogin = (e, p) => {
-    const URL = 'https://apidev.riskymakira.com/';
+    const URL = 'http://203.130.204.220:3000/';
     this.setState({ isLoading: true });
     const body = {
       email: e,
