@@ -25,8 +25,7 @@ import ImagePicker from 'react-native-image-picker';
 
 import { toast } from '../Public/components';
 import Color from '../Public/Color';
-// import { HOST_NAME } from 'react-native-dotenv';
-const HOST_NAME = 'http://203.130.204.220:3000/';
+import { HOST_NAME, SOCKET_HOST } from 'react-native-dotenv';
 import { connect } from 'react-redux';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
@@ -236,8 +235,7 @@ class personal extends Component {
   };
 
   setSocketOn = orderId => {
-    const SOCKET_HOSTS = 'http://203.130.204.220:3001';
-    const socket = SocketIOClient(`${SOCKET_HOSTS}`);
+    const socket = SocketIOClient(`${SOCKET_HOST}`);
     socket.on(orderId, res => {
       if (res.resultCode === 0) {
         this.setState({ idSocketStatus: res.orderStatus });

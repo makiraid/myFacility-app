@@ -23,8 +23,7 @@ import { toast } from '../Public/components';
 import Color from '../Public/Color';
 import Axios from 'axios';
 import SocketIOClient from 'socket.io-client';
-// import { HOST_NAME } from 'react-native-dotenv';
-const HOST_NAME = 'http://203.130.204.220:3000/';
+import { HOST_NAME, SOCKET_HOST } from 'react-native-dotenv';
 import { connect } from 'react-redux';
 
 const height = Dimensions.get('window').height;
@@ -62,7 +61,7 @@ class personal extends Component {
 
   state = {
     isShow: true,
-    isMapReady: false,
+    isMapReady: NaN,
     image: '',
     inputLocation: '',
     inputDetailLocation: '',
@@ -125,9 +124,6 @@ class personal extends Component {
 
   getOrder = () => {
     const { userCode, token } = this.props.auth;
-    setTimeout(() => {
-      this.setState({ isMapReady: true });
-    }, 2000)
     this.setState({
       isLoading: true,
       statusType: 1
@@ -189,8 +185,7 @@ class personal extends Component {
   updateStatus = async statusType => {
     const { userCode, token } = this.props.auth;
     const { orderId } = this.state;
-    const SOCKET_HOSTS = 'http://203.130.204.220:3001';
-    const socket = SocketIOClient(SOCKET_HOSTS);
+    const socket = SocketIOClient(SOCKET_HOST);
     socket.emit('update', {
       userCode: userCode,
       token: token,
