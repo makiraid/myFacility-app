@@ -61,7 +61,7 @@ class personal extends Component {
 
   state = {
     isShow: true,
-    isMapReady: NaN,
+    isMapReady: true,
     image: '',
     inputLocation: '',
     inputDetailLocation: '',
@@ -134,8 +134,12 @@ class personal extends Component {
     };
     Axios.post(`${HOST_NAME}api/v1/order-list`, body)
       .then(res => {
-        this.props.setOrderData(res.data.orders);
-        this.animate(res.data.orders);
+        if (res.data.orders.length !== 0) {
+          this.props.setOrderData(res.data.orders);
+          this.animate(res.data.orders);
+        } else {
+          toast('Tidak ada pesanan');
+        }
       })
       .catch(err => {
         toast('Error get order' + JSON.stringify(err.message));
